@@ -5,16 +5,15 @@ import { useStore } from "@/store"
 export default function Whiteboard() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fabricRef = useRef<Canvas | null>(null)
-  const { tool, brushColor, brushSize } = useStore()
-
+  const { tool, showWhiteboard, brushColor, brushSize } = useStore()
   const isDrawing = tool === "draw"
 
   useEffect(() => {
     if (!canvasRef.current) return
 
     const canvas = new Canvas(canvasRef.current, {
-      width: 200,
-      height: 356,
+      width: 360,
+      height: 640,
       backgroundColor: "transparent",
       isDrawingMode: false,
     })
@@ -23,12 +22,9 @@ export default function Whiteboard() {
     brush.color = brushColor
     brush.width = brushSize
     canvas.freeDrawingBrush = brush
-
     fabricRef.current = canvas
 
-    return () => {
-      canvas.dispose()
-    }
+    return () => { canvas.dispose() }
   }, [])
 
   useEffect(() => {
@@ -50,6 +46,7 @@ export default function Whiteboard() {
       inset: 0,
       zIndex: 15,
       pointerEvents: isDrawing ? "all" : "none",
+      opacity: showWhiteboard ? 1 : 0,
     }}>
       <canvas ref={canvasRef} />
     </div>

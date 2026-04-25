@@ -1,11 +1,8 @@
 import { create } from "zustand"
 
 type RecordingStatus = "idle" | "recording" | "paused"
-
 type CaptionStyle = "bold-yellow" | "white" | "kinetic"
-
 type Tool = "cursor" | "draw" | "text" | "shape" | "code" | "caption"
-
 type Template = "quick-tip" | "bug-fix" | "whiteboard" | "live-code"
 
 interface Caption {
@@ -26,6 +23,7 @@ interface StoreState {
   brushColor: string
   brushSize: number
   showCode: boolean
+  showWhiteboard: boolean
   codeLanguage: "rust" | "python"
   codeContent: string
 
@@ -39,6 +37,7 @@ interface StoreState {
   setBrushColor: (c: string) => void
   setBrushSize: (s: number) => void
   setShowCode: (v: boolean) => void
+  setShowWhiteboard: (v: boolean) => void
   setCodeLanguage: (l: "rust" | "python") => void
   setCodeContent: (c: string) => void
 }
@@ -54,6 +53,7 @@ export const useStore = create<StoreState>((set) => ({
   brushColor: "#f97316",
   brushSize: 3,
   showCode: false,
+  showWhiteboard: false,
   codeLanguage: "rust",
   codeContent: "",
 
@@ -67,6 +67,7 @@ export const useStore = create<StoreState>((set) => ({
   setBrushColor: (brushColor) => set({ brushColor }),
   setBrushSize: (brushSize) => set({ brushSize }),
   setShowCode: (showCode) => set({ showCode }),
+  setShowWhiteboard: (showWhiteboard) => set({ showWhiteboard }),
   setCodeLanguage: (codeLanguage) => set({ codeLanguage }),
   setCodeContent: (codeContent) => set({ codeContent }),
 }))

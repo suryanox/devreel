@@ -12,7 +12,23 @@ const tools: { id: Tool; label: string; icon: string }[] = [
 ]
 
 export default function Sidebar() {
-  const { tool, setTool } = useStore()
+  const { tool, setTool, setShowCode, setShowWhiteboard, setCodeContent, codeLanguage } = useStore()
+
+  function handleToolClick(id: Tool) {
+  setTool(id)
+  if (id !== "code") setShowCode(false)
+  if (id !== "draw") setShowWhiteboard(false)
+  if (id === "code") {
+    setShowCode(true)
+    if (!useStore.getState().codeContent) {
+      setCodeContent(codeLanguage === "rust"
+        ? `async fn fetch(url: &str) {\n  let res = reqwest::get(url).await?;\n  println!("{}", res.text().await?);\n}`
+        : `async def fetch(url):\n  async with aiohttp.ClientSession() as s:\n    r = await s.get(url)\n    print(await r.text())`
+      )
+    }
+  }
+  if (id === "draw") setShowWhiteboard(true)
+}
 
   return (
     <div style={{
@@ -27,9 +43,9 @@ export default function Sidebar() {
       zIndex: 10,
     }}>
       {tools.map((t, i) => (
-        <>
+        <div key={t.id} style={{ display: "contents" }}>
           {i === 4 && (
-            <div key="div" style={{
+            <div style={{
               width: "28px",
               height: "0.5px",
               background: "var(--border)",
@@ -37,10 +53,9 @@ export default function Sidebar() {
             }} />
           )}
           <button
-            key={t.id}
             className={`icon-btn ${tool === t.id ? "active" : ""}`}
             title={t.label}
-            onClick={() => setTool(t.id)}
+            onClick={() => handleToolClick(t.id)}
             style={{
               width: "36px",
               height: "36px",
@@ -51,7 +66,7 @@ export default function Sidebar() {
           >
             {t.icon}
           </button>
-        </>
+        </div>
       ))}
     </div>
   )
