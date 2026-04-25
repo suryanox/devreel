@@ -2,7 +2,7 @@ import { create } from "zustand"
 
 type RecordingStatus = "idle" | "recording" | "paused"
 type CaptionStyle = "bold-yellow" | "white" | "kinetic"
-type Tool = "cursor" | "draw" | "text" | "shape" | "code" | "caption"
+type Tool = "cursor" | "draw" | "code" | "caption" | "browser"
 type Template = "quick-tip" | "bug-fix" | "whiteboard" | "live-code"
 
 interface Caption {
@@ -24,6 +24,8 @@ interface StoreState {
   brushSize: number
   showCode: boolean
   showWhiteboard: boolean
+  showBrowser: boolean
+  browserUrl: string
   codeLanguage: "rust" | "python"
   codeContent: string
 
@@ -38,6 +40,8 @@ interface StoreState {
   setBrushSize: (s: number) => void
   setShowCode: (v: boolean) => void
   setShowWhiteboard: (v: boolean) => void
+  setShowBrowser: (v: boolean) => void
+  setBrowserUrl: (u: string) => void
   setCodeLanguage: (l: "rust" | "python") => void
   setCodeContent: (c: string) => void
 }
@@ -54,6 +58,8 @@ export const useStore = create<StoreState>((set) => ({
   brushSize: 3,
   showCode: false,
   showWhiteboard: false,
+  showBrowser: false,
+  browserUrl: "https://google.com",
   codeLanguage: "rust",
   codeContent: "",
 
@@ -68,6 +74,8 @@ export const useStore = create<StoreState>((set) => ({
   setBrushSize: (brushSize) => set({ brushSize }),
   setShowCode: (showCode) => set({ showCode }),
   setShowWhiteboard: (showWhiteboard) => set({ showWhiteboard }),
+  setShowBrowser: (showBrowser) => set({ showBrowser }),
+  setBrowserUrl: (browserUrl) => set({ browserUrl }),
   setCodeLanguage: (codeLanguage) => set({ codeLanguage }),
   setCodeContent: (codeContent) => set({ codeContent }),
 }))

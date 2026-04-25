@@ -23,6 +23,7 @@ image = "0.25"
 log = "0.4"
 env_logger = "0.11"
 
+
 [lib]
 name = "devreel_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]

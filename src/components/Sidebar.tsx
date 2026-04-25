@@ -1,31 +1,29 @@
 import { useStore } from "@/store"
 import {
   MousePointer2,
-  Pencil,
-  Type,
-  Shapes,
+  PenLine,
   Code2,
-  Captions,
+  Captions
 } from "lucide-react"
 
-type Tool = "cursor" | "draw" | "text" | "shape" | "code" | "caption"
+type Tool = "cursor" | "draw" | "code" | "caption" | "browser"
 
 const tools: { id: Tool; label: string; icon: React.ReactNode }[] = [
   { id: "cursor", label: "Cursor", icon: <MousePointer2 size={16} /> },
-  { id: "draw", label: "Draw", icon: <Pencil size={16} /> },
-  { id: "text", label: "Text", icon: <Type size={16} /> },
-  { id: "shape", label: "Shapes", icon: <Shapes size={16} /> },
+  { id: "draw", label: "Canvas", icon: <PenLine size={16} /> },
   { id: "code", label: "Code", icon: <Code2 size={16} /> },
-  { id: "caption", label: "Captions", icon: <Captions size={16} /> },
+  { id: "caption", label: "Captions", icon: <Captions size={16} /> }
 ]
 
 export default function Sidebar() {
-  const { tool, setTool, setShowCode } = useStore()
+  const { tool, setTool, setShowCode, setShowBrowser } = useStore()
 
   function handleToolClick(id: Tool) {
     setTool(id)
     if (id === "code") setShowCode(true)
     else setShowCode(false)
+    if (id === "browser") setShowBrowser(true)
+    else setShowBrowser(false)
   }
 
   return (
@@ -42,7 +40,7 @@ export default function Sidebar() {
     }}>
       {tools.map((t, i) => (
         <div key={t.id} style={{ display: "contents" }}>
-          {i === 4 && (
+          {i === 2 && (
             <div style={{
               width: "28px",
               height: "0.5px",
