@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { useStore } from "@/store"
 
 export default function CustomCursor() {
-  const { cursorStyle } = useStore()
+  const { cursorStyle, tool } = useStore()
   const [pos, setPos] = useState({ x: -100, y: -100 })
   const [visible, setVisible] = useState(false)
   const frameRef = useRef<DOMRect | null>(null)
@@ -37,6 +37,7 @@ export default function CustomCursor() {
   }, [])
 
   if (!visible) return null
+  if (tool === "draw") return null
 
   return (
     <div style={{
