@@ -27,8 +27,10 @@ export function useFFmpeg() {
         console.log("[FFmpeg]", message)
       })
       ffmpegInstance.on("progress", ({ progress }: { progress: number }) => {
-        setExportProgress(Math.round(progress * 100))
-      })
+  if (progress >= 0 && progress <= 1) {
+    setExportProgress(Math.round(progress * 100))
+  }
+})
       await ffmpegInstance.load({
         coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
         wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
@@ -43,45 +45,54 @@ export function useFFmpeg() {
   }
 
   async function exportVideo(recordingBlob: Blob): Promise<Blob> {
-    if (!ffmpegInstance || !ffmpegLoaded) throw new Error("FFmpeg not loaded")
-    const { fetchFile } = await import("@ffmpeg/util")
+  if (!ffmpegInstance || !ffmpegLoaded) throw new Error("FFmpeg not loaded")
+  const { fetchFile } = await import("@ffmpeg/util")
 
-    setExportStage("Writing input file")
-    setExportProgress(0)
+  setExportStage("Writing input file")
+  setExportProgress(5)
 
-    const inputData = await fetchFile(recordingBlob)
-    await ffmpegInstance.writeFile("input.webm", inputData)
+  const inputData = await fetchFile(recordingBlob)
+  await ffmpegInstance.writeFile("input.webm", inputData)
 
-    setExportStage("Encoding")
+  setExportStage("Encoding video")
+  setExportProgress(15)
 
-    // The recording is already cropped to the phone frame at 1080×1920.
-    // Just re-encode to H.264 MP4.
-    await ffmpegInstance.exec([
-      "-i", "input.webm",
-      "-vf", "scale=1080:1920",
-      "-c:v", "libx264",
-      "-preset", "fast",
-      "-crf", "18",
-      "-c:a", "aac",
-      "-b:a", "192k",
-      "-movflags", "+faststart",
-      "-y",
-      "output.mp4",
-    ])
+  let fakeProgress = 15
+  const progressTimer = setInterval(() => {
+    fakeProgress = Math.min(fakeProgress + Math.random() * 3, 90)
+    setExportProgress(Math.round(fakeProgress))
+  }, 400)
 
-    setExportStage("Finalizing")
-    const data = await ffmpegInstance.readFile("output.mp4")
-    await ffmpegInstance.deleteFile("input.webm")
-    await ffmpegInstance.deleteFile("output.mp4")
+  await ffmpegInstance.exec([
+    "-i", "input.webm",
+    "-vf", "scale=1080:1920",
+    "-c:v", "libx264",
+    "-preset", "fast",
+    "-crf", "18",
+    "-c:a", "aac",
+    "-b:a", "192k",
+    "-movflags", "+faststart",
+    "-y",
+    "output.mp4",
+  ])
 
-    setExportProgress(100)
-    setExportStage("Done")
+  clearInterval(progressTimer)
 
-    useStore.getState().setHasRecording(false)
-    useStore.getState().setRecordingBlob(null)
+  setExportStage("Finalizing")
+  setExportProgress(95)
 
-    return new Blob([data], { type: "video/mp4" })
-  }
+  const data = await ffmpegInstance.readFile("output.mp4")
+  await ffmpegInstance.deleteFile("input.webm")
+  await ffmpegInstance.deleteFile("output.mp4")
+
+  setExportProgress(100)
+  setExportStage("Done")
+
+  useStore.getState().setHasRecording(false)
+  useStore.getState().setRecordingBlob(null)
+
+  return new Blob([data], { type: "video/mp4" })
+}
 
   return { ffmpegLoaded, ffmpegLoading, exportVideo, load }
 }
