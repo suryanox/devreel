@@ -14,15 +14,16 @@ interface Stroke {
   points: Point[]
 }
 
+const COLORS = ["#f97316", "#ef4444", "#a78bfa", "#10b981", "#facc15", "#fff", "#60a5fa"]
+
 export default function Whiteboard() {
-  const { tool, brushColor, brushSize } = useStore()
+  const { tool, brushColor, setBrushColor, brushSize, setBrushSize } = useStore()
   const isActive = tool === "draw"
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [drawTool, setDrawTool] = useState<DrawTool>("pen")
   const [strokes, setStrokes] = useState<Stroke[]>([])
   const [current, setCurrent] = useState<Stroke | null>(null)
   const isDrawing = useRef(false)
-  const startPoint = useRef<Point | null>(null)
 
   useEffect(() => {
     redraw()
@@ -33,13 +34,9 @@ export default function Whiteboard() {
     if (!canvas) return
     const ctx = canvas.getContext("2d")
     if (!ctx) return
-
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-
     const all = preview ? [...strokes, preview] : strokes
-    for (const stroke of all) {
-      drawStroke(ctx, stroke)
-    }
+    for (const stroke of all) drawStroke(ctx, stroke)
   }
 
   function drawStroke(ctx: CanvasRenderingContext2D, stroke: Stroke) {
@@ -52,9 +49,7 @@ export default function Whiteboard() {
     if (stroke.tool === "pen" || stroke.tool === "eraser") {
       ctx.beginPath()
       ctx.moveTo(stroke.points[0].x, stroke.points[0].y)
-      for (const p of stroke.points.slice(1)) {
-        ctx.lineTo(p.x, p.y)
-      }
+      for (const p of stroke.points.slice(1)) ctx.lineTo(p.x, p.y)
       ctx.stroke()
     } else if (stroke.tool === "line" && stroke.points.length >= 2) {
       const a = stroke.points[0]
@@ -85,28 +80,15 @@ export default function Whiteboard() {
     const canvas = canvasRef.current!
     const rect = canvas.getBoundingClientRect()
     if ("touches" in e) {
-      return {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top,
-      }
+      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top }
     }
-    return {
-      x: (e as React.MouseEvent).clientX - rect.left,
-      y: (e as React.MouseEvent).clientY - rect.top,
-    }
+    return { x: (e as React.MouseEvent).clientX - rect.left, y: (e as React.MouseEvent).clientY - rect.top }
   }
 
   function onDown(e: React.MouseEvent | React.TouchEvent) {
     isDrawing.current = true
     const pos = getPos(e)
-    startPoint.current = pos
-    const stroke: Stroke = {
-      tool: drawTool,
-      color: brushColor,
-      size: brushSize,
-      points: [pos],
-    }
-    setCurrent(stroke)
+    setCurrent({ tool: drawTool, color: brushColor, size: brushSize, points: [pos] })
   }
 
   function onMove(e: React.MouseEvent | React.TouchEvent) {
@@ -127,11 +109,7 @@ export default function Whiteboard() {
   if (!isActive) return null
 
   return (
-    <div style={{
-      position: "absolute",
-      inset: 0,
-      zIndex: 16,
-    }}>
+    <div style={{ position: "absolute", inset: 0, zIndex: 16 }}>
       <div style={{
         position: "absolute",
         top: 8,
@@ -141,11 +119,14 @@ export default function Whiteboard() {
         display: "flex",
         alignItems: "center",
         gap: 4,
-        background: "rgba(0,0,0,0.7)",
+        background: "rgba(0,0,0,0.75)",
         backdropFilter: "blur(8px)",
         border: "0.5px solid var(--border)",
         borderRadius: 10,
-        padding: "4px 8px",
+        padding: "5px 8px",
+        flexWrap: "wrap",
+        maxWidth: 340,
+        justifyContent: "center",
       }}>
         {([
           { id: "pen", icon: <Pen size={11} /> },
@@ -172,14 +153,45 @@ export default function Whiteboard() {
             {t.icon}
           </button>
         ))}
+
         <div style={{ width: 0.5, height: 16, background: "var(--border)", margin: "0 2px" }} />
+
+        {COLORS.map((c) => (
+          <button
+            key={c}
+            onClick={() => setBrushColor(c)}
+            style={{
+              width: 16,
+              height: 16,
+              borderRadius: "50%",
+              background: c,
+              border: brushColor === c ? "2px solid white" : "2px solid transparent",
+              outline: brushColor === c ? "2px solid var(--accent)" : "none",
+              outlineOffset: 1,
+              flexShrink: 0,
+            }}
+          />
+        ))}
+
+        <div style={{ width: 0.5, height: 16, background: "var(--border)", margin: "0 2px" }} />
+
+        <input
+          type="range"
+          min={1}
+          max={12}
+          value={brushSize}
+          onChange={(e) => setBrushSize(Number(e.target.value))}
+          style={{ width: 60 }}
+        />
+
         <button
           onClick={() => setStrokes([])}
           style={{
             fontSize: 8,
             color: "var(--text-muted)",
-            padding: "2px 4px",
+            padding: "2px 5px",
             borderRadius: 4,
+            border: "0.5px solid var(--border)",
           }}
         >
           clear
@@ -200,7 +212,7 @@ export default function Whiteboard() {
         style={{
           position: "absolute",
           inset: 0,
-          cursor: drawTool === "eraser" ? "cell" : "crosshair",
+          cursor: "crosshair",
           touchAction: "none",
         }}
       />
