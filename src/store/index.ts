@@ -2,7 +2,8 @@ import { create } from "zustand"
 
 type RecordingStatus = "idle" | "recording" | "paused"
 type CaptionStyle = "bold-yellow" | "white" | "kinetic"
-type Tool = "cursor" | "draw" | "code"
+type Tool = "draw" | "code"
+type CursorStyle = "pointer" | "hand"
 type Template = "quick-tip" | "bug-fix" | "whiteboard" | "live-code"
 
 interface Caption {
@@ -32,6 +33,7 @@ interface StoreState {
   ffmpegLoading: boolean
   exportProgress: number
   exportStage: string
+  cursorStyle: CursorStyle
 
   setStatus: (s: RecordingStatus) => void
   setDuration: (d: number) => void
@@ -52,12 +54,13 @@ interface StoreState {
   setFfmpegLoading: (v: boolean) => void
   setExportProgress: (p: number) => void
   setExportStage: (s: string) => void
+  setCursorStyle: (c: CursorStyle) => void
 }
 
 export const useStore = create<StoreState>((set) => ({
   status: "idle",
   duration: 0,
-  tool: "cursor",
+  tool: "draw",
   captionStyle: "bold-yellow",
   template: "quick-tip",
   captions: [],
@@ -74,6 +77,7 @@ export const useStore = create<StoreState>((set) => ({
   ffmpegLoading: false,
   exportProgress: 0,
   exportStage: "",
+  cursorStyle: "pointer",
 
   setStatus: (status) => set({ status }),
   setDuration: (duration) => set({ duration }),
@@ -94,4 +98,5 @@ export const useStore = create<StoreState>((set) => ({
   setFfmpegLoading: (ffmpegLoading) => set({ ffmpegLoading }),
   setExportProgress: (exportProgress) => set({ exportProgress }),
   setExportStage: (exportStage) => set({ exportStage }),
+  setCursorStyle: (cursorStyle) => set({ cursorStyle }),
 }))
