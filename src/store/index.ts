@@ -36,6 +36,7 @@ interface StoreState {
   cursorStyle: CursorStyle
   showCamera: boolean
   cameraMode: "pip" | "half"
+  exportResolution: "1080p" | "720p" | "4k" | "8k"
 
   setStatus: (s: RecordingStatus) => void
   setDuration: (d: number) => void
@@ -59,6 +60,7 @@ interface StoreState {
   setCursorStyle: (c: CursorStyle) => void
   setShowCamera: (v: boolean) => void
   setCameraMode: (m: "pip" | "half") => void
+  setExportResolution: (r: "1080p" | "720p" | "4k" | "8k") => void
 }
 
 export const useStore = create<StoreState>((set) => ({
@@ -84,6 +86,7 @@ export const useStore = create<StoreState>((set) => ({
   cursorStyle: "pointer",
   showCamera: false,
   cameraMode: "pip",
+  exportResolution: "4k",
 
   setStatus: (status) => set({ status }),
   setDuration: (duration) => set({ duration }),
@@ -107,4 +110,5 @@ export const useStore = create<StoreState>((set) => ({
   setCursorStyle: (cursorStyle) => set({ cursorStyle }),
   setShowCamera: (showCamera) => set({ showCamera }),
   setCameraMode: (cameraMode) => set({ cameraMode }),
+  setExportResolution: (exportResolution) => set({ exportResolution }),
 }))

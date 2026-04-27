@@ -44,7 +44,11 @@ export function useFFmpeg() {
     }
   }
 
-  async function exportVideo(recordingBlob: Blob): Promise<Blob> {
+async function exportVideo(
+  recordingBlob: Blob,
+  outW: number = 1080,
+  outH: number = 1920,
+): Promise<Blob> {
   if (!ffmpegInstance || !ffmpegLoaded) throw new Error("FFmpeg not loaded")
   const { fetchFile } = await import("@ffmpeg/util")
 
@@ -65,7 +69,7 @@ export function useFFmpeg() {
 
   await ffmpegInstance.exec([
     "-i", "input.webm",
-    "-vf", "scale=1080:1920",
+    "-vf", `scale=${outW}:${outH}`,
     "-c:v", "libx264",
     "-preset", "fast",
     "-crf", "18",
@@ -77,7 +81,6 @@ export function useFFmpeg() {
   ])
 
   clearInterval(progressTimer)
-
   setExportStage("Finalizing")
   setExportProgress(95)
 
