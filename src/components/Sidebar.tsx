@@ -17,12 +17,18 @@ const cursors: { id: CursorStyle; label: string; icon: React.ReactNode }[] = [
   { id: "hand", label: "Hand", icon: <Hand size={14} /> },
 ]
 
+const captionStyles = [
+  { id: "bold-yellow", label: "Bold Yellow" },
+  { id: "white", label: "White" },
+  { id: "kinetic", label: "Kinetic" },
+] as const
+
 function Divider() {
   return (
     <div style={{
       width: 28,
       height: 0.5,
-      background: "rgba(255, 255, 255, 0.25)",
+      background: "var(--border)",
       margin: "6px 0",
     }} />
   )
@@ -67,20 +73,83 @@ function SidebarButton({
   )
 }
 
+function Tooltip({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      position: "absolute",
+      left: 44,
+      top: "50%",
+      transform: "translateY(-50%)",
+      background: "var(--bg-elevated)",
+      border: "0.5px solid var(--border)",
+      borderRadius: 10,
+      padding: 8,
+      display: "flex",
+      flexDirection: "column",
+      gap: 4,
+      zIndex: 100,
+      minWidth: 140,
+      boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+    }}>
+      {children}
+    </div>
+  )
+}
+
+function TooltipButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: "6px 10px",
+        borderRadius: 6,
+        fontSize: 10,
+        textAlign: "left",
+        background: active ? "var(--bg-active)" : "transparent",
+        border: `0.5px solid ${active ? "var(--border-accent)" : "transparent"}`,
+        color: active ? "var(--accent-light)" : "var(--text-secondary)",
+        cursor: "pointer",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
 export default function Sidebar() {
   const {
     tool, setTool, setShowCode,
     showCaptions, setShowCaptions,
+    captionStyle, setCaptionStyle,
     showCamera, setShowCamera,
     cameraMode, setCameraMode,
     cursorStyle, setCursorStyle,
   } = useStore()
 
+  const [captionOpen, setCaptionOpen] = useState(false)
   const [cameraOpen, setCameraOpen] = useState(false)
 
   function handleToolClick(id: Tool) {
     setTool(id)
     setShowCode(id === "code")
+  }
+
+  function handleCaptionClick() {
+    if (!showCaptions) {
+      setShowCaptions(true)
+      setCaptionOpen(true)
+    } else {
+      setCaptionOpen(!captionOpen)
+    }
   }
 
   function handleCameraClick() {
@@ -121,14 +190,50 @@ export default function Sidebar() {
 
       <Divider />
 
-      <SidebarButton
-        active={showCaptions}
-        title="Captions"
-        onClick={() => setShowCaptions(!showCaptions)}
-        accentColor="var(--caption-yellow)"
-      >
-        <Captions size={16} />
-      </SidebarButton>
+      <div style={{ position: "relative" }}>
+        <SidebarButton
+          active={showCaptions}
+          title="Captions"
+          onClick={handleCaptionClick}
+          accentColor="var(--caption-yellow)"
+        >
+          <Captions size={16} />
+        </SidebarButton>
+
+        {captionOpen && showCaptions && (
+          <Tooltip>
+            <div className="label" style={{ marginBottom: 4, paddingLeft: 4 }}>Caption style</div>
+            {captionStyles.map((s) => (
+              <TooltipButton
+                key={s.id}
+                active={captionStyle === s.id}
+                onClick={() => setCaptionStyle(s.id)}
+              >
+                {s.id === "bold-yellow" && "🟡 "}
+                {s.id === "white" && "⬜ "}
+                {s.id === "kinetic" && "✨ "}
+                {s.label}
+              </TooltipButton>
+            ))}
+            <div style={{ height: 0.5, background: "var(--border)", margin: "2px 0" }} />
+            <button
+              onClick={() => { setShowCaptions(false); setCaptionOpen(false) }}
+              style={{
+                padding: "6px 10px",
+                borderRadius: 6,
+                fontSize: 10,
+                textAlign: "left",
+                color: "var(--red)",
+                cursor: "pointer",
+                background: "transparent",
+                border: "none",
+              }}
+            >
+              ✕ Turn off captions
+            </button>
+          </Tooltip>
+        )}
+      </div>
 
       <div style={{ position: "relative" }}>
         <SidebarButton
@@ -141,49 +246,21 @@ export default function Sidebar() {
         </SidebarButton>
 
         {cameraOpen && showCamera && (
-          <div style={{
-            position: "absolute",
-            left: 44,
-            top: "50%",
-            transform: "translateY(-50%)",
-            background: "var(--bg-elevated)",
-            border: "0.5px solid var(--border)",
-            borderRadius: 10,
-            padding: 8,
-            display: "flex",
-            flexDirection: "column",
-            gap: 4,
-            zIndex: 100,
-            minWidth: 130,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-          }}>
+          <Tooltip>
             <div className="label" style={{ marginBottom: 4, paddingLeft: 4 }}>Camera mode</div>
-
             {[
               { id: "pip", label: "□ Picture in picture" },
               { id: "half", label: "▄ Half screen" },
             ].map((m) => (
-              <button
+              <TooltipButton
                 key={m.id}
+                active={cameraMode === m.id}
                 onClick={() => setCameraMode(m.id as "pip" | "half")}
-                style={{
-                  padding: "6px 10px",
-                  borderRadius: 6,
-                  fontSize: 10,
-                  textAlign: "left",
-                  background: cameraMode === m.id ? "var(--bg-active)" : "transparent",
-                  border: `0.5px solid ${cameraMode === m.id ? "var(--border-accent)" : "transparent"}`,
-                  color: cameraMode === m.id ? "var(--accent-light)" : "var(--text-secondary)",
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                }}
               >
                 {m.label}
-              </button>
+              </TooltipButton>
             ))}
-
             <div style={{ height: 0.5, background: "var(--border)", margin: "2px 0" }} />
-
             <button
               onClick={() => { setShowCamera(false); setCameraOpen(false) }}
               style={{
@@ -199,7 +276,7 @@ export default function Sidebar() {
             >
               ✕ Turn off camera
             </button>
-          </div>
+          </Tooltip>
         )}
       </div>
 
