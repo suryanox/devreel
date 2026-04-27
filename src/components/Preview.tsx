@@ -103,7 +103,7 @@ export default function Preview() {
           overflow: "hidden",
           boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)",
           flexShrink: 0,
-          cursor: cursorStyle !== "default" ? "none" : "default",
+          cursor: "none",
         }}
       >
         <RecIndicator />
