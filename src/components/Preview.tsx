@@ -113,45 +113,6 @@ export default function Preview() {
   <Camera />
   <CustomCursor />
 </div>
-
-      <div style={{
-        position: "absolute",
-        bottom: 20,
-        right: 20,
-        display: "flex",
-        flexDirection: "column",
-        gap: 6,
-      }}>
-        {[
-          { label: "format", value: "9:16" },
-          { label: "fps", value: "30 fps" },
-        ].map((s) => (
-          <div key={s.label} style={{
-            background: "rgba(0,0,0,0.5)",
-            border: "0.5px solid var(--border)",
-            borderRadius: "var(--radius-md)",
-            padding: "5px 10px",
-            backdropFilter: "blur(8px)",
-          }}>
-            <div className="label" style={{ marginBottom: 2 }}>{s.label}</div>
-            <div style={{ fontSize: 10, fontFamily: "monospace", color: "var(--text-primary)" }}>
-              {s.value}
-            </div>
-          </div>
-        ))}
-
-        <div style={{
-          background: "rgba(0,0,0,0.6)",
-          border: "0.5px solid rgba(139,92,246,0.3)",
-          borderRadius: "var(--radius-md)",
-          padding: "5px 8px",
-        }}>
-          <div className="label" style={{ marginBottom: 2 }}>debug</div>
-          <div style={{ fontSize: 8, fontFamily: "monospace", color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
-            {debugInfo}
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
