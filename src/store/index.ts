@@ -34,6 +34,8 @@ interface StoreState {
   exportProgress: number
   exportStage: string
   cursorStyle: CursorStyle
+  showCamera: boolean
+  cameraMode: "pip" | "half"
 
   setStatus: (s: RecordingStatus) => void
   setDuration: (d: number) => void
@@ -55,6 +57,8 @@ interface StoreState {
   setExportProgress: (p: number) => void
   setExportStage: (s: string) => void
   setCursorStyle: (c: CursorStyle) => void
+  setShowCamera: (v: boolean) => void
+  setCameraMode: (m: "pip" | "half") => void
 }
 
 export const useStore = create<StoreState>((set) => ({
@@ -78,6 +82,8 @@ export const useStore = create<StoreState>((set) => ({
   exportProgress: 0,
   exportStage: "",
   cursorStyle: "pointer",
+  showCamera: false,
+  cameraMode: "pip",
 
   setStatus: (status) => set({ status }),
   setDuration: (duration) => set({ duration }),
@@ -99,4 +105,6 @@ export const useStore = create<StoreState>((set) => ({
   setExportProgress: (exportProgress) => set({ exportProgress }),
   setExportStage: (exportStage) => set({ exportStage }),
   setCursorStyle: (cursorStyle) => set({ cursorStyle }),
+  setShowCamera: (showCamera) => set({ showCamera }),
+  setCameraMode: (cameraMode) => set({ cameraMode }),
 }))
