@@ -115,7 +115,7 @@ export default function CodeBlock() {
       display: "flex",
       flexDirection: "column",
       background: "#1e1e2e",
-      borderRadius: 36,
+      borderRadius: 0,
       overflow: "hidden",
     }}>
       <div style={{
