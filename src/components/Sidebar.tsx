@@ -22,7 +22,7 @@ function Divider() {
     <div style={{
       width: 28,
       height: 0.5,
-      background: "var(--border)",
+      background: "rgba(255, 255, 255, 0.25)",
       margin: "6px 0",
     }} />
   )
