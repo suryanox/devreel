@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { useStore } from "@/store"
 
 export default function CustomCursor() {
-  const { cursorStyle, tool } = useStore()
+  const { presentMode } = useStore()
   const [pos, setPos] = useState({ x: -100, y: -100 })
   const [visible, setVisible] = useState(false)
   const frameRef = useRef<DOMRect | null>(null)
@@ -37,7 +37,6 @@ export default function CustomCursor() {
   }, [])
 
   if (!visible) return null
-  if (tool === "draw") return null
 
   return (
     <div style={{
@@ -50,22 +49,21 @@ export default function CustomCursor() {
       userSelect: "none",
       lineHeight: 1,
     }}>
-      {cursorStyle === "pointer" && (
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      {presentMode ? (
+        <div style={{ fontSize: 22, filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.8))" }}>
+          👆
+        </div>
+      ) : (
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
           <path
-            d="M4 2L6.5 18L10 14L13 20L15 19L12 13L17 13.5Z"
+            d="M4 2L6.5 17L9.5 13L12.5 19L14.5 18L11.5 12L16 12.5Z"
             fill="white"
             stroke="black"
-            strokeWidth="1.2"
+            strokeWidth="1"
             strokeLinejoin="round"
           />
         </svg>
       )}
-      {cursorStyle === "hand" && (
-  <div style={{ fontSize: 24, filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.8))" }}>
-    👆
-  </div>
-)}
     </div>
   )
 }

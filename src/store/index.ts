@@ -37,6 +37,7 @@ interface StoreState {
   showCamera: boolean
   cameraMode: "pip" | "half"
   exportResolution: "1080p" | "720p" | "4k" | "8k"
+  presentMode: boolean
 
   setStatus: (s: RecordingStatus) => void
   setDuration: (d: number) => void
@@ -61,6 +62,7 @@ interface StoreState {
   setShowCamera: (v: boolean) => void
   setCameraMode: (m: "pip" | "half") => void
   setExportResolution: (r: "1080p" | "720p" | "4k" | "8k") => void
+  setPresentMode: (v: boolean) => void
 }
 
 export const useStore = create<StoreState>((set) => ({
@@ -87,6 +89,7 @@ export const useStore = create<StoreState>((set) => ({
   showCamera: false,
   cameraMode: "pip",
   exportResolution: "4k",
+  presentMode: false,
 
   setStatus: (status) => set({ status }),
   setDuration: (duration) => set({ duration }),
@@ -111,4 +114,5 @@ export const useStore = create<StoreState>((set) => ({
   setShowCamera: (showCamera) => set({ showCamera }),
   setCameraMode: (cameraMode) => set({ cameraMode }),
   setExportResolution: (exportResolution) => set({ exportResolution }),
+  setPresentMode: (presentMode) => set({ presentMode }),
 }))

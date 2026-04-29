@@ -61,7 +61,6 @@ export default function Preview() {
   useSpeech()
   const frameRef = useRef<HTMLDivElement>(null)
   const [debugInfo, setDebugInfo] = useState("")
-  const { cursorStyle } = useStore()
 
   useEffect(() => {
     function update() {

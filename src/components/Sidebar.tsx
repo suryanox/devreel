@@ -1,20 +1,14 @@
 "use client"
 
 import { useStore } from "@/store"
-import { PenLine, Code2, Captions, MousePointer2, Hand, Video } from "lucide-react"
+import { PenLine, Code2, Captions, Video, Presentation } from "lucide-react"
 import { useState } from "react"
 
 type Tool = "draw" | "code"
-type CursorStyle = "pointer" | "hand"
 
 const tools: { id: Tool; label: string; icon: React.ReactNode }[] = [
   { id: "draw", label: "Canvas", icon: <PenLine size={16} /> },
-  { id: "code", label: "Code", icon: <Code2 size={16} /> },
-]
-
-const cursors: { id: CursorStyle; label: string; icon: React.ReactNode }[] = [
-  { id: "pointer", label: "Pointer", icon: <MousePointer2 size={14} /> },
-  { id: "hand", label: "Hand", icon: <Hand size={14} /> },
+  { id: "code", label: "Code", icon: <Code2 size={16} /> }
 ]
 
 const captionStyles = [
@@ -132,7 +126,7 @@ export default function Sidebar() {
     captionStyle, setCaptionStyle,
     showCamera, setShowCamera,
     cameraMode, setCameraMode,
-    cursorStyle, setCursorStyle,
+    presentMode, setPresentMode,
   } = useStore()
 
   const [captionOpen, setCaptionOpen] = useState(false)
@@ -280,21 +274,14 @@ export default function Sidebar() {
         )}
       </div>
 
-      <Divider />
-
-      <div className="label" style={{ marginBottom: 2 }}>PTR</div>
-
-      {cursors.map((c) => (
-        <SidebarButton
-          key={c.id}
-          active={cursorStyle === c.id}
-          title={c.label}
-          onClick={() => setCursorStyle(c.id)}
-          accentColor="var(--green)"
-        >
-          {c.id === "hand" ? "👆" : c.icon}
-        </SidebarButton>
-      ))}
+      <SidebarButton
+        active={presentMode}
+        title="Present mode — cursor becomes hand"
+        onClick={() => setPresentMode(!presentMode)}
+        accentColor="#f97316"
+      >
+        <Presentation size={16} />
+      </SidebarButton>
     </div>
   )
 }
