@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import "./globals.css"
+import GitHubStar from "@/components/GitHubStar"
 
 export const metadata: Metadata = {
   title: "DevReel Studio",
@@ -13,7 +14,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body style={{ height: "100vh", overflow: "hidden" }}>
+      <body style={{ height: "100vh", overflow: "hidden", position: "relative" }}>
+        <GitHubStar />
         {children}
       </body>
     </html>
