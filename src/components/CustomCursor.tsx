@@ -8,6 +8,7 @@ export default function CustomCursor() {
   const [pos, setPos] = useState({ x: -100, y: -100 })
   const [visible, setVisible] = useState(false)
   const frameRef = useRef<DOMRect | null>(null)
+  const { tool } = useStore()
 
   useEffect(() => {
     function updateFrameRect() {
@@ -36,7 +37,7 @@ export default function CustomCursor() {
     }
   }, [])
 
-  if (!visible) return null
+  if (!visible || tool !== 'code') return null
 
   return (
     <div style={{
@@ -50,7 +51,11 @@ export default function CustomCursor() {
       lineHeight: 1,
     }}>
       {presentMode ? (
-        <div style={{ fontSize: 22, filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.8))" }}>
+        <div style={{
+    fontSize: 28,
+    color: "#fff",
+    textShadow: "0 0 8px rgba(255,255,255,0.6), 0 2px 6px rgba(0,0,0,0.7)",
+  }}>
           👆
         </div>
       ) : (

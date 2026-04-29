@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { useStore } from "@/store"
 import CodeBlock from "@/components/CodeBlock"
 import Whiteboard from "@/components/Whiteboard"
 import CaptionOverlay from "@/components/CaptionOverlay"
@@ -9,58 +8,10 @@ import { useSpeech } from "@/hooks/useSpeech"
 import CustomCursor from "@/components/CustomCursor"
 import Camera from "@/components/Camera"
 
-function RecIndicator() {
-  const { status, duration } = useStore()
-  const mins = String(Math.floor(duration / 60)).padStart(2, "0")
-  const secs = String(duration % 60).padStart(2, "0")
-  if (status === "idle") return null
-  return (
-    <>
-      <div style={{
-        position: "absolute",
-        top: 16,
-        left: 16,
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        zIndex: 30,
-      }}>
-        <div style={{
-          width: 8,
-          height: 8,
-          borderRadius: "50%",
-          background: status === "paused" ? "var(--amber)" : "var(--red)",
-          animation: status === "recording" ? "pulse 1.2s infinite" : "none",
-        }} />
-        <span style={{
-          fontSize: 10,
-          color: "rgba(255,255,255,0.6)",
-          letterSpacing: 1,
-          textTransform: "uppercase",
-          fontFamily: "monospace",
-        }}>
-          {status === "paused" ? "paused" : "rec"}
-        </span>
-      </div>
-      <div style={{
-        position: "absolute",
-        top: 16,
-        right: 16,
-        fontSize: 11,
-        color: "rgba(255,255,255,0.5)",
-        fontFamily: "monospace",
-        zIndex: 30,
-      }}>
-        {mins}:{secs}
-      </div>
-    </>
-  )
-}
-
 export default function Preview() {
   useSpeech()
   const frameRef = useRef<HTMLDivElement>(null)
-  const [debugInfo, setDebugInfo] = useState("")
+  const [, setDebugInfo] = useState("")
 
   useEffect(() => {
     function update() {

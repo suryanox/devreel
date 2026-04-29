@@ -290,6 +290,7 @@ export default function CodeBlock() {
               overflow: "hidden",
               width: "100%",
               height: "100%",
+              cursor: "none",
             }}
           />
         </div>
