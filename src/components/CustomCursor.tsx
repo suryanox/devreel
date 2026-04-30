@@ -11,6 +11,21 @@ export default function CustomCursor() {
   const { tool } = useStore()
 
   useEffect(() => {
+  const frame = document.querySelector("[data-phone-frame]") as HTMLElement | null
+  if (!frame) return
+
+  if (presentMode && tool === "code") {
+    frame.style.cursor = "none"
+  } else {
+    frame.style.cursor = "auto"
+  }
+
+  return () => {
+    frame.style.cursor = "auto"
+  }
+}, [presentMode, tool])
+
+  useEffect(() => {
     function updateFrameRect() {
       const frame = document.querySelector("[data-phone-frame]")
       if (frame) frameRef.current = frame.getBoundingClientRect()
@@ -38,9 +53,12 @@ export default function CustomCursor() {
   }, [])
 
   if (!visible || tool !== 'code') return null
+  
+  if (!visible || tool !== "code" || !presentMode) return null
 
-  return (
-    <div style={{
+return (
+  <div
+    style={{
       position: "absolute",
       left: pos.x,
       top: pos.y,
@@ -49,26 +67,18 @@ export default function CustomCursor() {
       zIndex: 50,
       userSelect: "none",
       lineHeight: 1,
-    }}>
-      {presentMode ? (
-        <div style={{
-    fontSize: 28,
-    color: "#fff",
-    textShadow: "0 0 8px rgba(255,255,255,0.6), 0 2px 6px rgba(0,0,0,0.7)",
-  }}>
-          👆
-        </div>
-      ) : (
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <path
-            d="M4 2L6.5 17L9.5 13L12.5 19L14.5 18L11.5 12L16 12.5Z"
-            fill="white"
-            stroke="black"
-            strokeWidth="1"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )}
+    }}
+  >
+    <div
+      style={{
+        fontSize: 28,
+        color: "#fff",
+        textShadow:
+          "0 0 8px rgba(255,255,255,0.6), 0 2px 6px rgba(0,0,0,0.7)",
+      }}
+    >
+      👆
     </div>
-  )
+  </div>
+)
 }
