@@ -3,8 +3,8 @@ import "./globals.css"
 import GitHubStar from "@/components/GitHubStar"
 
 export const metadata: Metadata = {
-  title: "DevReel Studio",
-  description: "Create engaging dev reels",
+  title: "DevReel — AI-Powered Dev Reels",
+  description: "Generate engaging developer reels from a simple schema",
 }
 
 export default function RootLayout({
