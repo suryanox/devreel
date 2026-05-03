@@ -461,12 +461,12 @@ html, body {
 }
 
 .text-title {
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-size: 30px;
   font-weight: 700;
   color: #ffffff;
   line-height: 1.15;
-  letter-spacing: -0.3px;
+  letter-spacing: 0;
   text-wrap: balance;
 }
 
@@ -500,6 +500,11 @@ html, body {
   font-size: 11px;
   color: var(--neon-cyan);
   letter-spacing: 0.08em;
+}
+
+.text-highlight-token {
+  position: relative;
+  font-weight: inherit;
 }
 
 
@@ -1563,7 +1568,7 @@ html, body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.8;
   padding: 14px 16px;
   border: none;

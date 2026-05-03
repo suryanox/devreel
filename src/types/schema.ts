@@ -75,6 +75,8 @@ export interface TextElement {
   position?: Position
   color?: string
   size?: number
+  highlight_token?: string
+  highlight_color?: string
   animation_in?: AnimationIn
   animation_out?: AnimationOut
   idle?: IdleAnimation

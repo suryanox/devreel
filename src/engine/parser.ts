@@ -270,6 +270,8 @@ function normalizeElement(el: any): SceneElement {
         style: el.style || "body",
         color: el.color,
         size: el.size,
+        highlight_token: el.highlight_token || "",
+        highlight_color: el.highlight_color || "#facc15",
       }
 
     case "code":

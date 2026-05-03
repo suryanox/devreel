@@ -27,6 +27,10 @@ async function getHighlighted(code: string, lang: string): Promise<string> {
   return html
 }
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
 export default function SceneRenderer({ scene, isPlaying }: Props) {
   const elementRefs = useRef<(HTMLElement | null)[]>([])
   const idleKillsRef = useRef<(() => void)[]>([])
@@ -160,6 +164,33 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
     }
   }
 
+  const renderHighlightedText = (
+    value: string,
+    highlightToken?: string,
+    highlightColor?: string
+  ) => {
+    if (!highlightToken) return value
+
+    const parts = value.split(new RegExp(`(${escapeRegExp(highlightToken)})`, "g"))
+    if (parts.length === 1) return value
+
+    const tokenColor = highlightColor ?? "#facc15"
+
+    return parts.map((part, partIndex) => (
+      part === highlightToken ? (
+        <span
+          key={`${highlightToken}-${partIndex}`}
+          className="text-highlight-token"
+          style={{ color: tokenColor, textShadow: `0 0 18px ${tokenColor}44` }}
+        >
+          {part}
+        </span>
+      ) : (
+        <span key={`text-${partIndex}`}>{part}</span>
+      )
+    ))
+  }
+
 
   const renderCodeBlock = (
     index: number,
@@ -226,7 +257,11 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
               className={getTextClass(element.style)}
               style={{ color: element.color ?? undefined }}
             >
-              {element.value}
+              {renderHighlightedText(
+                element.value,
+                element.highlight_token,
+                element.highlight_color
+              )}
             </p>
           </div>
         )

@@ -34,8 +34,10 @@ scenes:
         idle: float
         delay: 0.5
       - type: text
-        value: "It wasn't you."
-        style: subtitle
+        value: "But why main()?"
+        style: title
+        highlight_token: "main()"
+        highlight_color: "#facc15"
         position: bottom
         animation_in: slide_up
         delay: 1.2`
