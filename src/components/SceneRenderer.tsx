@@ -4,13 +4,6 @@ import { useEffect, useRef, useState } from "react"
 import type { Scene, SceneElement, IdleAnimation } from "@/types/schema"
 import { animateIn, staggerIn, applyIdleAnimation } from "@/engine/animator"
 import { highlight } from "@/lib/highlight"
-import Gradient from "./backgrounds/Gradient"
-import Terminal from "./backgrounds/Terminal"
-import Blackboard from "./backgrounds/Blackboard"
-import CodeEditor from "./backgrounds/CodeEditor"
-import Space from "./backgrounds/Space"
-import Grid3D from "./backgrounds/Grid3D"
-import Circuit from "./backgrounds/Circuit"
 
 interface Props {
   scene: Scene
@@ -29,6 +22,18 @@ async function getHighlighted(code: string, lang: string): Promise<string> {
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function resolveBackgroundColor(color?: string) {
+  switch ((color ?? "").toLowerCase()) {
+    case "black":
+      return "#080810"
+    case "grey":
+    case "gray":
+      return "#171b24"
+    default:
+      return color || "#080810"
+  }
 }
 
 export default function SceneRenderer({ scene, isPlaying }: Props) {
@@ -106,6 +111,12 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
       } else if (element.type === "split_screen") {
         const panels = el.querySelectorAll<HTMLElement>(".split-panel")
         staggerIn(Array.from(panels), element.animation_in ?? "slide_up", 0.2, delay)
+      } else if (element.type === "tree_diagram") {
+        const nodes = el.querySelectorAll<HTMLElement>(".tree-node-card")
+        staggerIn(Array.from(nodes), element.animation_in ?? "slide_up", element.stagger ?? 0.12, delay)
+      } else if (element.type === "ranking_cards") {
+        const cards = el.querySelectorAll<HTMLElement>(".ranking-card")
+        staggerIn(Array.from(cards), element.animation_in ?? "slide_up", element.stagger ?? 0.14, delay)
       } else {
         const isCodeEl = element.type === "code" || element.type === "code_highlight"
         const animIn = (isCodeEl && element.animation_in === "type_in")
@@ -125,17 +136,12 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
 
   const renderBackground = () => {
     const bg = scene.background
-    if (!bg) return <div className="scene-bg" style={{ background: "#090d1a" }} />
+    if (!bg) return <div className="scene-bg" style={{ background: "#080810" }} />
     switch (bg.type) {
-      case "gradient":    return <Gradient colors={bg.gradient ?? ["#090d1a", "#0f172a"]} />
-      case "solid":       return <div className="scene-bg" style={{ background: bg.color ?? "#090d1a" }} />
-      case "terminal":    return <Terminal />
-      case "blackboard":  return <Blackboard />
-      case "code_editor": return <CodeEditor />
-      case "space":       return <Space />
-      case "grid_3d":     return <Grid3D />
-      case "circuit":     return <Circuit />
-      default:            return <div className="scene-bg" style={{ background: "#090d1a" }} />
+      case "solid":
+        return <div className="scene-bg" style={{ background: resolveBackgroundColor(bg.color) }} />
+      default:
+        return <div className="scene-bg" style={{ background: "#080810" }} />
     }
   }
 
@@ -239,9 +245,33 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
     )
   }
 
+  const renderTreeNode = (
+    node: { label: string; accent?: boolean; color?: string; children?: { label: string; accent?: boolean; color?: string; children?: any[] }[] },
+    key: string
+  ) => (
+    <li key={key} className="tree-node">
+      <div
+        className={`tree-node-card ${node.accent ? "tree-node-card--accent" : ""}`}
+        style={{
+          opacity: 0,
+          borderColor: node.color ? `${node.color}66` : undefined,
+          boxShadow: node.color ? `inset 3px 0 0 ${node.color}` : undefined,
+        }}
+      >
+        <span className="tree-node-dot" style={{ background: node.color ?? "#22d3ee" }} />
+        <span className="tree-node-text">{node.label}</span>
+      </div>
+      {node.children && node.children.length > 0 && (
+        <ul className="tree-children">
+          {node.children.map((child, childIndex) => renderTreeNode(child, `${key}-${childIndex}`))}
+        </ul>
+      )}
+    </li>
+  )
+
 
   const renderElement = (element: SceneElement, index: number) => {
-    const posClass = getPositionClass(element.position)
+    const posClass = getPositionClass("position" in element ? element.position : undefined)
 
     switch (element.type) {
 
@@ -514,6 +544,69 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
                       </div>
                     ))}
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+
+      case "tree_diagram":
+        return (
+          <div
+            key={index}
+            ref={el => { elementRefs.current[index] = el }}
+            className={`scene-element ${posClass}`}
+            style={{ opacity: 1, width: "90%" }}
+          >
+            {element.title && (
+              <p className="tree-title">{element.title}</p>
+            )}
+            <div className="tree-diagram">
+              <ul className="tree-root-list">
+                {element.nodes.map((node, nodeIndex) => renderTreeNode(node, `tree-${nodeIndex}`))}
+              </ul>
+            </div>
+          </div>
+        )
+
+      case "ranking_cards":
+        return (
+          <div
+            key={index}
+            ref={el => { elementRefs.current[index] = el }}
+            className={`scene-element ${posClass}`}
+            style={{ opacity: 1, width: "90%" }}
+          >
+            {element.title && (
+              <p className="ranking-title">{element.title}</p>
+            )}
+            <div className="ranking-cards">
+              {element.items.map((item, itemIndex) => (
+                <div
+                  key={itemIndex}
+                  className={`ranking-card ${item.accent ? "ranking-card--accent" : ""}`}
+                  style={{
+                    opacity: 0,
+                    borderColor: item.color ? `${item.color}66` : undefined,
+                    boxShadow: item.color ? `inset 3px 0 0 ${item.color}` : undefined,
+                  }}
+                >
+                  <div className="ranking-card-main">
+                    <div className="ranking-card-topline">
+                      <span className="ranking-card-title">{item.title}</span>
+                      {item.badge && (
+                        <span className="ranking-card-badge">{item.badge}</span>
+                      )}
+                    </div>
+                    {item.subtitle && (
+                      <span className="ranking-card-subtitle">{item.subtitle}</span>
+                    )}
+                  </div>
+                  {item.score && (
+                    <span className="ranking-card-score" style={{ color: item.color ?? undefined }}>
+                      {item.score}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>

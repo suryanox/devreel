@@ -44,14 +44,7 @@ export type TextStyle =
   | "code_label"
 
 export type BackgroundType =
-  | "terminal"
-  | "blackboard"
-  | "code_editor"
-  | "gradient"
   | "solid"
-  | "space"
-  | "grid_3d"
-  | "circuit"
 
 export type ElementType =
   | "text"
@@ -65,6 +58,8 @@ export type ElementType =
   | "stack_diagram"
   | "split_screen"
   | "callout"
+  | "tree_diagram"
+  | "ranking_cards"
 
 // ─── Element interfaces ────────────────────────────────────
 
@@ -225,6 +220,44 @@ export interface SplitScreenElement {
   delay?: number
 }
 
+export interface TreeNode {
+  label: string
+  accent?: boolean
+  color?: string
+  children?: TreeNode[]
+}
+
+export interface TreeDiagramElement {
+  type: "tree_diagram"
+  nodes: TreeNode[]
+  title?: string
+  position?: Position
+  animation_in?: AnimationIn
+  idle?: IdleAnimation
+  delay?: number
+  stagger?: number
+}
+
+export interface RankingCard {
+  title: string
+  subtitle?: string
+  score?: string
+  badge?: string
+  color?: string
+  accent?: boolean
+}
+
+export interface RankingCardsElement {
+  type: "ranking_cards"
+  items: RankingCard[]
+  title?: string
+  position?: Position
+  animation_in?: AnimationIn
+  idle?: IdleAnimation
+  delay?: number
+  stagger?: number
+}
+
 // ─── Union ────────────────────────────────────────────────
 
 export type SceneElement =
@@ -239,6 +272,8 @@ export type SceneElement =
   | FlowDiagramElement
   | StackDiagramElement
   | SplitScreenElement
+  | TreeDiagramElement
+  | RankingCardsElement
 
 // ─── Background ───────────────────────────────────────────
 

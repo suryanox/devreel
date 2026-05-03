@@ -7,40 +7,75 @@ import { AlertCircle, CheckCircle2 } from "lucide-react"
 import { highlight } from "@/lib/highlight"
 
 const EXAMPLE_SCHEMA = `meta:
-  title: "Why Every Program Starts From main()"
+  title: "Why main() gets called"
   aspect_ratio: "9:16"
   fps: 30
   background: "#080810"
 
 scenes:
   - id: 1
-    duration: 4
+    duration: 5
     background:
-      type: grid_3d
+      type: solid
+      color: black
     elements:
-      - type: code_highlight
-        language: c
-        value: "int main() {"
-        highlight_token: "main"
-        highlight_color: "#facc15"
-        position: top
-        animation_in: fade_in
-        delay: 0.2
       - type: text
-        value: "Who called this?"
+        value: "Every program starts somewhere..."
         style: hook
         position: center
-        animation_in: zoom_in
+        animation_in: fade_in
         idle: float
-        delay: 0.5
+
       - type: text
         value: "But why main()?"
         style: title
-        highlight_token: "main()"
-        highlight_color: "#facc15"
         position: bottom
+        highlight_token: "main()"
+        highlight_color: "#ffb703"
+        animation_in: zoom_in
+
+  - id: 2
+    duration: 5
+    background:
+      type: solid
+      color: grey
+    elements:
+      - type: code
+        value: |
+          int main() {
+              return 0;
+          }
+        language: cpp
+        position: center
+        animation_in: type_in
+
+      - type: text
+        value: "This is where your code begins"
+        style: subtitle
+        position: top
+        animation_in: fade_in
+
+  - id: 3
+    duration: 5
+    background:
+      type: solid
+      color: black
+    elements:
+      - type: stack_diagram
+        title: "What really happens first"
+        position: center
         animation_in: slide_up
-        delay: 1.2`
+        layers:
+          - label: "main()"
+            sublabel: "your function"
+            color: "#ffb703"
+            accent: true
+          - label: "runtime setup"
+            sublabel: "args, memory, startup"
+            color: "#8ecae6"
+          - label: "_start"
+            sublabel: "real entry from the loader"
+            color: "#90be6d"`
 
 export default function Editor() {
   const {

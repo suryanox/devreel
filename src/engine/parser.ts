@@ -7,17 +7,16 @@ import type {
   FlowEdge,
   StackLayer,
   SplitPanel,
+  TreeNode,
+  RankingCard,
 } from "@/types/schema"
 
-const VALID_BACKGROUNDS = [
-  "terminal", "blackboard", "code_editor",
-  "gradient", "solid", "space", "grid_3d", "circuit",
-]
+const VALID_BACKGROUNDS = ["solid"]
 
 const VALID_ELEMENTS = [
   "text", "code", "code_highlight", "bullet_list",
   "image", "arrow", "divider", "callout",
-  "flow_diagram", "stack_diagram", "split_screen",
+  "flow_diagram", "stack_diagram", "split_screen", "tree_diagram", "ranking_cards",
 ]
 
 const VALID_ANIMATIONS_IN = [
@@ -222,6 +221,45 @@ function validateElement(el: any, prefix: string): string | null {
         return `${prefix}: split_screen panels require an items array`
       }
       break
+
+    case "tree_diagram":
+      if (!el.nodes || !Array.isArray(el.nodes) || el.nodes.length === 0) {
+        return `${prefix}: tree_diagram requires a non-empty nodes array`
+      }
+      for (const node of el.nodes) {
+        const err = validateTreeNode(node, prefix)
+        if (err) return err
+      }
+      break
+
+    case "ranking_cards":
+      if (!el.items || !Array.isArray(el.items) || el.items.length === 0) {
+        return `${prefix}: ranking_cards requires a non-empty items array`
+      }
+      for (const item of el.items) {
+        if (!item.title) {
+          return `${prefix}: each ranking_cards item requires a title`
+        }
+      }
+      break
+  }
+
+  return null
+}
+
+function validateTreeNode(node: any, prefix: string): string | null {
+  if (!node.label) {
+    return `${prefix}: each tree_diagram node requires a label`
+  }
+
+  if (node.children) {
+    if (!Array.isArray(node.children)) {
+      return `${prefix}: tree_diagram node children must be an array`
+    }
+    for (const child of node.children) {
+      const err = validateTreeNode(child, prefix)
+      if (err) return err
+    }
   }
 
   return null
@@ -260,6 +298,14 @@ function normalizeBase(el: any) {
 
 function normalizeElement(el: any): SceneElement {
   const base = normalizeBase(el)
+  const normalizeTreeNode = (node: any): TreeNode => ({
+    label: node.label,
+    accent: node.accent || false,
+    color: node.color,
+    children: Array.isArray(node.children)
+      ? node.children.map((child: any) => normalizeTreeNode(child))
+      : [],
+  })
 
   switch (el.type) {
     case "text":
@@ -384,6 +430,31 @@ function normalizeElement(el: any): SceneElement {
         right: normalizePanel(el.right),
       }
     }
+
+    case "tree_diagram":
+      return {
+        ...base,
+        type: "tree_diagram",
+        title: el.title,
+        stagger: el.stagger ?? 0.12,
+        nodes: (el.nodes as any[]).map((node: any): TreeNode => normalizeTreeNode(node)),
+      }
+
+    case "ranking_cards":
+      return {
+        ...base,
+        type: "ranking_cards",
+        title: el.title,
+        stagger: el.stagger ?? 0.14,
+        items: (el.items as any[]).map((item: any): RankingCard => ({
+          title: item.title,
+          subtitle: item.subtitle,
+          score: item.score,
+          badge: item.badge,
+          color: item.color,
+          accent: item.accent || false,
+        })),
+      }
 
     default:
       return { ...base, type: "text", value: "", style: "body" }
