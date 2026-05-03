@@ -1,101 +1,88 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import { useStore } from "@/store"
 import { parseSchema } from "@/engine/parser"
-import { Play, Download, ChevronRight, Sparkles, AlertCircle, CheckCircle2 } from "lucide-react"
+import { AlertCircle, CheckCircle2 } from "lucide-react"
+import { highlight } from "@/lib/highlight"
 
 const EXAMPLE_SCHEMA = `meta:
-  title: "Why Rust is Fast"
+  title: "Why Every Program Starts From main()"
   aspect_ratio: "9:16"
   fps: 30
-  background: "#020617"
+  background: "#080810"
 
 scenes:
   - id: 1
-    duration: 3
+    duration: 4
     background:
-      type: gradient
-      gradient: ["#020617", "#0f172a", "#1e1b4b"]
+      type: grid_3d
     elements:
+      - type: code_highlight
+        language: c
+        value: "int main() {"
+        highlight_token: "main"
+        highlight_color: "#facc15"
+        position: top
+        animation_in: fade_in
+        delay: 0.2
       - type: text
-        value: "🦀 Why Rust is Fast"
+        value: "Who called this?"
         style: hook
         position: center
         animation_in: zoom_in
-        animation_out: fade_out
-
-  - id: 2
-    duration: 4
-    background:
-      type: terminal
-      theme: dark
-    elements:
+        idle: float
+        delay: 0.5
       - type: text
-        value: "No Garbage Collector"
-        style: title
-        position: top
+        value: "It wasn't you."
+        style: subtitle
+        position: bottom
         animation_in: slide_up
-        delay: 0.2
-      - type: code
-        language: rust
-        value: |
-          fn main() {
-              let s = String::from("hello");
-              println!("{}", s);
-              // s is freed here automatically
-          }
-        animation_in: fade_in
-        delay: 0.6
-
-  - id: 3
-    duration: 3.5
-    background:
-      type: gradient
-      gradient: ["#020617", "#1a0533"]
-    elements:
-      - type: text
-        value: "Zero-cost abstractions"
-        style: title
-        position: top
-        animation_in: slide_up
-      - type: bullet_list
-        items:
-          - "✓ Ownership system"
-          - "✓ Borrow checker"
-          - "✓ No runtime overhead"
-        position: center
-        animation_in: slide_up
-        stagger: 0.3
-        delay: 0.4
-
-  - id: 4
-    duration: 2.5
-    background:
-      type: gradient
-      gradient: ["#020617", "#0f172a"]
-    elements:
-      - type: text
-        value: "Fast by design 🚀"
-        style: hook
-        position: center
-        animation_in: zoom_in`
+        delay: 1.2`
 
 export default function Editor() {
   const {
-    rawInput, setRawInput,
-    schema, setSchema,
-    parseError, setParseError,
-    isPlaying, setIsPlaying,
-    currentScene, setCurrentScene,
-    isExporting,
+    rawInput,
+    setRawInput,
+    schema,
+    setSchema,
+    parseError,
+    setParseError,
+    setCurrentScene,
   } = useStore()
 
-  const [showExample, setShowExample] = useState(!rawInput)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const highlightRef = useRef<HTMLDivElement>(null)
+  const [highlightedYaml, setHighlightedYaml] = useState<string>("")
+
+  // Load example on first mount if empty
+  useEffect(() => {
+    if (!rawInput) {
+      handleInput(EXAMPLE_SCHEMA)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Re-highlight whenever rawInput changes
+  useEffect(() => {
+    if (!rawInput.trim()) {
+      setHighlightedYaml("")
+      return
+    }
+    highlight(rawInput, "yaml").then(html => {
+      setHighlightedYaml(html)
+    })
+  }, [rawInput])
+
+  // Sync highlight div scroll with textarea scroll
+  const syncScroll = useCallback(() => {
+    if (!textareaRef.current || !highlightRef.current) return
+    highlightRef.current.scrollTop = textareaRef.current.scrollTop
+    highlightRef.current.scrollLeft = textareaRef.current.scrollLeft
+  }, [])
 
   function handleInput(value: string) {
     setRawInput(value)
-    setShowExample(false)
 
     if (!value.trim()) {
       setSchema(null)
@@ -114,193 +101,77 @@ export default function Editor() {
     }
   }
 
-  function loadExample() {
-    handleInput(EXAMPLE_SCHEMA)
-    setShowExample(false)
-  }
-
-  function handleRun() {
-    if (!schema) return
-    setCurrentScene(0)
-    setIsPlaying(true)
-  }
-
-  const displayValue = showExample ? EXAMPLE_SCHEMA : rawInput
+  // Handle tab key in textarea
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Tab") {
+      e.preventDefault()
+      const el = e.currentTarget
+      const start = el.selectionStart
+      const end = el.selectionEnd
+      const newVal = el.value.slice(0, start) + "  " + el.value.slice(end)
+      handleInput(newVal)
+      requestAnimationFrame(() => {
+        el.selectionStart = start + 2
+        el.selectionEnd = start + 2
+      })
+    }
+  }, [])
 
   return (
-    <div style={{
-      width: 420,
-      flexShrink: 0,
-      background: "var(--bg-surface)",
-      borderRight: "0.5px solid var(--border)",
-      display: "flex",
-      flexDirection: "column",
-      height: "100vh",
-      overflow: "hidden",
-    }}>
-      <div style={{
-        padding: "16px 16px 12px",
-        borderBottom: "0.5px solid var(--border)",
-        flexShrink: 0,
-      }}>
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 4,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{
-              width: 28,
-              height: 28,
-              borderRadius: 8,
-              background: "var(--accent-dim)",
-              border: "0.5px solid var(--accent)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}>
-              <span style={{ fontSize: 14 }}>🎬</span>
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
-                DevReel
-              </div>
-              <div style={{ fontSize: 10, color: "var(--text-muted)" }}>
-                Schema Editor
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={loadExample}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              padding: "4px 10px",
-              borderRadius: 6,
-              background: "var(--accent-dim)",
-              border: "0.5px solid var(--accent)",
-              color: "var(--accent-light)",
-              fontSize: 10,
-              fontWeight: 500,
-            }}
-          >
-            <Sparkles size={10} />
-            Load example
-          </button>
+    <div className="editor-panel">
+      {/* Header */}
+      <div className="editor-header">
+        <div className="editor-header-left">
+          <span className="editor-logo">DevReel</span>
+          <span className="editor-badge">YAML</span>
         </div>
-      </div>
-
-      <div style={{
-        padding: "10px 16px 6px",
-        flexShrink: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-      }}>
-        <div className="label">Schema — YAML or JSON</div>
         {schema && !parseError && (
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-            fontSize: 10,
-            color: "var(--green)",
-          }}>
-            <CheckCircle2 size={10} />
+          <div className="editor-status editor-status--ok">
+            <CheckCircle2 size={11} />
             {schema.scenes.length} scene{schema.scenes.length !== 1 ? "s" : ""}
+          </div>
+        )}
+        {parseError && (
+          <div className="editor-status editor-status--err">
+            <AlertCircle size={11} />
+            error
           </div>
         )}
       </div>
 
-      <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+      {/* Editor body — highlight layer + textarea overlay */}
+      <div className="editor-body">
+        {/* Highlighted YAML layer */}
+        <div
+          ref={highlightRef}
+          className="editor-highlight-layer"
+          dangerouslySetInnerHTML={{ __html: highlightedYaml }}
+          aria-hidden="true"
+        />
+
+        {/* Transparent textarea on top for input */}
         <textarea
-          value={displayValue}
-          onChange={(e) => handleInput(e.target.value)}
-          placeholder={`Paste your schema here...\n\nTip: Use the "Load example" button to see a working schema, or generate one with AI using the schema spec below.`}
+          ref={textareaRef}
+          className="editor-textarea editor-textarea--overlay"
+          value={rawInput}
+          onChange={e => handleInput(e.target.value)}
+          onScroll={syncScroll}
+          onKeyDown={handleKeyDown}
+          placeholder="Paste your YAML schema here..."
           spellCheck={false}
-          style={{
-            width: "100%",
-            height: "100%",
-            background: "transparent",
-            color: showExample ? "var(--text-muted)" : "var(--text-primary)",
-            fontFamily: "var(--font-mono)",
-            fontSize: 11.5,
-            lineHeight: 1.7,
-            padding: "12px 16px",
-            border: "none",
-            outline: "none",
-            resize: "none",
-            tabSize: 2,
-          }}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
         />
       </div>
 
+      {/* Error bar */}
       {parseError && (
-        <div style={{
-          margin: "0 12px 8px",
-          padding: "8px 12px",
-          borderRadius: "var(--radius-md)",
-          background: "rgba(239,68,68,0.08)",
-          border: "0.5px solid rgba(239,68,68,0.2)",
-          display: "flex",
-          gap: 8,
-          alignItems: "flex-start",
-          flexShrink: 0,
-        }}>
-          <AlertCircle size={12} color="var(--red)" style={{ flexShrink: 0, marginTop: 1 }} />
-          <span style={{ fontSize: 10, color: "var(--red)", lineHeight: 1.5 }}>
-            {parseError}
-          </span>
+        <div className="editor-error-bar">
+          <AlertCircle size={11} />
+          <span>{parseError}</span>
         </div>
       )}
-
-      <div style={{
-        padding: "10px 12px",
-        borderTop: "0.5px solid var(--border)",
-        display: "flex",
-        gap: 8,
-        flexShrink: 0,
-      }}>
-        <button
-          className="btn btn-primary"
-          onClick={handleRun}
-          disabled={!schema || isPlaying}
-          style={{ flex: 1, fontSize: 12 }}
-        >
-          <Play size={13} />
-          {isPlaying ? "Playing..." : "Run Preview"}
-        </button>
-
-        <button
-          className="btn"
-          disabled={!schema || isExporting}
-          style={{ fontSize: 12, padding: "8px 14px" }}
-          onClick={() => useStore.getState().setIsExporting(true)}
-        >
-          <Download size={13} />
-          Export
-        </button>
-      </div>
-
-      <div style={{
-        padding: "8px 12px 12px",
-        flexShrink: 0,
-      }}>
-        <div style={{
-          padding: "10px 12px",
-          borderRadius: "var(--radius-md)",
-          background: "var(--bg-elevated)",
-          border: "0.5px solid var(--border)",
-        }}>
-          <div className="label" style={{ marginBottom: 6 }}>💡 AI Prompt tip</div>
-          <p style={{ fontSize: 10, color: "var(--text-secondary)", lineHeight: 1.6 }}>
-            Ask ChatGPT/Claude: <em style={{ color: "var(--accent-light)" }}>"Generate a DevReel schema for a 30-second reel about [topic]. Use 9:16 aspect ratio with scenes having backgrounds (terminal/gradient/code_editor), text elements with zoom_in/slide_up animations, and code elements."</em>
-          </p>
-        </div>
-      </div>
     </div>
   )
 }
