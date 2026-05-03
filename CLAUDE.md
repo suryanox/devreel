@@ -1,303 +1,370 @@
-# DevReel — AI-Powered Dev Reel Generator
+# DevReel
 
-## What We're Building
-A web tool where devs write a YAML schema describing their reel, paste it into an editor, and the engine renders it as a 9:16 video canvas. No manual recording. Schema → Preview → Export.
+DevReel is a schema-driven reel generator for developer education content.
 
-## How It Works
-1. User writes schema (or asks AI to generate one)
-2. Pastes into left panel editor
-3. Engine parses schema, renders scenes with animations
-4. User previews scene by scene on a clean 9:16 canvas
-5. Exports as MP4 via FFmpeg WASM
+The product is for making short 9:16 dev reels about coding, AI, tools, code editing, terminal workflows, algorithms, runtime concepts, and technical explanations. A user writes a YAML schema, DevReel parses it into scenes, and the preview renders animated foreground elements on a simple video canvas.
+
+The current direction is intentionally minimal: backgrounds should not carry the reel. The foreground elements do the teaching.
+
+## Product Shape
+
+DevReel is built around this workflow:
+
+1. Write a YAML reel schema in the editor.
+2. Parse the schema into typed scenes.
+3. Render a 9:16 preview canvas.
+4. Animate foreground elements with GSAP.
+5. Export the reel as MP4 through FFmpeg WASM.
+
+The tool should feel like a lightweight technical storytelling canvas, not a slide deck builder and not a heavy hacker UI. The visual system should favor clear foreground objects: code cards, text, callouts, stacks, flows, trees, split views, ranking cards, and diagrams.
+
+## Current Design Rules
+
+- Only one background type is supported: `solid`.
+- Users can pass `color: black` or `color: grey`.
+- `black` maps to a dark canvas.
+- `grey` maps to a soft dark grey canvas.
+- There are no animated or decorative background components.
+- Do not reintroduce IDE, terminal, blackboard, whiteboard, graph, grid, space, circuit, or gradient backgrounds as scene backgrounds.
+- If a reel needs an IDE, terminal, graph, tree, or stack, represent it as a foreground element, not as a background.
+- Foreground visuals should be clean, readable, and purpose-built for explanation.
 
 ## Tech Stack
-- **Next.js 15** (App Router, TypeScript)
-- **GSAP** — animation engine (animateIn, staggerIn, idle animations)
-- **Shiki** — VS Code-quality syntax highlighting
-- **FFmpeg WASM** (@ffmpeg/ffmpeg) — video export
-- **Zustand** — state management
-- **js-yaml** — schema parsing
-- **Space Grotesk** — display font
-- **JetBrains Mono** — code font
-- **lucide-react** — icons
+
+- Next.js App Router with TypeScript
+- React client components
+- Zustand for editor and preview state
+- js-yaml for YAML parsing
+- GSAP for animation
+- Shiki for syntax highlighting
+- FFmpeg WASM for video export
+- lucide-react for UI icons
 
 ## Project Structure
 
+```text
 src/
-├── app/
-│   ├── globals.css         ✅ all styles live here
-│   ├── layout.tsx          ✅
-│   └── page.tsx            ✅ root layout — Editor + Preview
-├── components/
-│   ├── Editor.tsx          ✅ left panel schema editor
-│   ├── Preview.tsx         ✅ right panel, 9:16 canvas, scene controls
-│   ├── SceneRenderer.tsx   ✅ renders scene bg + elements + animations
-│   ├── ExportButton.tsx    ✅ FFmpeg export UI
-│   ├── GitHubStar.tsx      ✅
-│   └── backgrounds/
-│       ├── Gradient.tsx    ✅ animated gradient
-│       ├── Terminal.tsx    ✅ typewriter terminal with scanlines
-│       ├── Blackboard.tsx  ✅ canvas chalk board
-│       ├── CodeEditor.tsx  ✅ VS Code style background
-│       ├── Space.tsx       ✅ canvas starfield warp
-│       ├── Grid3D.tsx      ✅ synthwave perspective grid (canvas)
-│       └── Circuit.tsx     ✅ animated circuit traces (canvas)
-├── engine/
-│   ├── parser.ts           ✅ YAML/JSON → ReelSchema with validation
-│   ├── animator.ts         ✅ GSAP animation helpers + idle animations
-│   └── renderer.ts         ✅ scene orchestrator
-├── hooks/
-│   ├── useEngine.ts        ✅ wires parser to store
-│   └── useFFmpeg.ts        ✅ FFmpeg WASM export pipeline
-├── lib/
-│   └── highlight.ts        ✅ Shiki highlighter singleton + cache
-├── store/
-│   └── index.ts            ✅ Zustand store
-└── types/
-    └── schema.ts           ✅ all TypeScript types
-
-## Store API
-```ts
-const {
-  schema,
-  rawInput,
-  parseError,
-  currentScene,
-  isPlaying,
-  isExporting,
-  exportProgress,
-  exportStage,
-
-  setSchema,
-  setRawInput,
-  setParseError,
-  setCurrentScene,
-  setIsPlaying,
-  setIsExporting,
-  setExportProgress,
-  setExportStage,
-} = useStore()
-```
----
-
-```md
-## Parser API
-```ts
-const { schema, error } = parseSchema(rawInput)
-animateIn(el, animationIn, delay, duration)
-animateOut(el, animationOut, delay, duration, onComplete)
-staggerIn(elements[], animationIn, stagger, delay, duration)
-applyIdleAnimation(el, idle, delay)
-glitchIn(el, delay)
-drawIn(el, delay, duration)
-typeInAnimation(el, text, duration, delay, onComplete)
+  app/
+    globals.css
+    layout.tsx
+    page.tsx
+  components/
+    Editor.tsx
+    Preview.tsx
+    SceneRenderer.tsx
+    ExportButton.tsx
+    GitHubStar.tsx
+  engine/
+    parser.ts
+    animator.ts
+    renderer.ts
+  hooks/
+    useEngine.ts
+    useFFmpeg.ts
+  lib/
+    highlight.ts
+  store/
+    index.ts
+  types/
+    schema.ts
 ```
 
+There is no active `src/components/backgrounds/` system anymore.
 
----
+## Schema Overview
 
-```md
-## Highlighter API
-```ts
-const html = await highlight(code, lang)
+Root schema:
 
----
-
-```md
-## Schema Format (Part 1)
 ```yaml
 meta:
-  title: "Why Every Program Starts From main()"
+  title: "Why main() is the entry point"
   aspect_ratio: "9:16"
   fps: 30
-  background: "#080810"
+  font: "mono"
 
 scenes:
   - id: 1
-    duration: 4
+    duration: 5
     background:
-      type: grid_3d
-    elements:
-      - type: text
-        value: "Who called this?"
-        style: hook
-        position: center
-        animation_in: zoom_in
-        animation_out: fade_out
-        idle: float
-        delay: 0.3
+      type: solid
+      color: black
+    elements: []
+```
 
+Supported background:
 
----
-
-```md
-## CSS Notes
-- All styles in `globals.css`
-- No CSS animations for scene elements (GSAP only)
-- 9:16 raw canvas (no phone chrome)
-- Shiki async — wait before animating
-- Kill GSAP tweens on cleanup
-
-## Schema Format (Part 2)
 ```yaml
-      - type: code_highlight
-        language: rust
-        value: |
-          fn main() {
-              println!("hello");
-          }
-        highlight_token: "main"
-        highlight_color: "#facc15"
-        position: center
-        animation_in: fade_in
-        idle: float_3d
-        delay: 0.5
+background:
+  type: solid
+  color: black
+```
 
-      - type: bullet_list
-        items: ["point 1", "point 2", "point 3"]
-        stagger: 0.3
-        animation_in: slide_up
-        position: center
-        delay: 0.4
+```yaml
+background:
+  type: solid
+  color: grey
+```
 
-      - type: flow_diagram
-        direction: horizontal
-        position: center
-        animation_in: fade_in
-        nodes:
-          - id: os
-            label: "OS"
-            color: "#f472b6"
-          - id: start
-            label: "_start"
-            accent: true
-            color: "#22d3ee"
-        edges:
-          - from: os
-            to: start
-            animated: true
-            label: "calls"
+## Supported Elements
 
-      - type: stack_diagram
-        position: center
-        stagger: 0.2
-        layers:
-          - label: "main()"
-            sublabel: "your code starts here"
-            color: "#22d3ee"
-            accent: true
-          - label: "C Runtime"
-            sublabel: "init stack + heap"
-            color: "#6366f1"
+### Text
 
-      - type: split_screen
-        position: center
-        left:
-          label: "C / C++"
-          color: "#6366f1"
-          icon: ">"
-          items: ["_start -> crt0", "call main()"]
-        right:
-          label: "Rust"
-          color: "#22d3ee"
-          icon: ">"
-          items: ["lang_start", "call main()"]
+```yaml
+- type: text
+  value: "But why main()?"
+  style: title
+  position: bottom
+  highlight_token: "main()"
+  highlight_color: "#ffb703"
+  animation_in: zoom_in
+```
 
-      - type: callout
-        value: "_start is set by the linker, not you"
-        accent: "#22d3ee"
-        position: bottom
-        animation_in: fade_in
-        delay: 1.2
+Text styles:
 
+- `hook`
+- `title`
+- `subtitle`
+- `body`
+- `caption`
+- `code_label`
 
-## CSS Architecture
+### Code
 
-**Layout**
-- `.app-layout`, `.app-header`, `.app-main`
-- `.canvas-wrapper`, `.canvas-frame`
+```yaml
+- type: code
+  value: |
+    int main() {
+        return 0;
+    }
+  language: cpp
+  position: center
+  animation_in: type_in
+```
 
-**Scene**
-- `.scene-root`
-- `.scene-bg`
-- `.scene-elements-layer`
+Supported languages:
 
-**Position**
-- `.el-pos--center`
-- `.el-pos--top`
-- `.el-pos--bottom`
-- `.el-pos--top-left/right`
-- `.el-pos--bottom-left/right`
+- `rust`
+- `python`
+- `typescript`
+- `bash`
+- `json`
+- `c`
+- `cpp`
 
-**Text**
-- `.text-hook`
-- `.text-title`
-- `.text-subtitle`
-- `.text-body`
-- `.text-caption`
-- `.text-code-label`
+### Code Highlight
 
-**Components**
-- `.code-block`, `.code-shiki`
-- `.bullet-list`, `.bullet-item`
-- `.flow-diagram`, `.flow-node`
-- `.stack-diagram`, `.stack-layer`
-- `.split-screen`, `.split-panel`
-- `.callout`
+```yaml
+- type: code_highlight
+  value: |
+    fn main() {
+        println!("hello");
+    }
+  language: rust
+  highlight_token: "main"
+  highlight_color: "#ffb703"
+  position: center
+  animation_in: fade_in
+```
 
-**Backgrounds**
-- `.grid3d-bg`
-- `.circuit-bg`
-- `.terminal-bg`
-- `.space-bg`
-- `.blackboard-bg`
-- `.code-editor-bg`
+### Callout
 
+```yaml
+- type: callout
+  value: "main() is where control is handed to your program"
+  accent: "#ffb703"
+  position: center
+  animation_in: pop_in
+```
 
-## CSS Variables
-```css
---bg, --bg-surface, --bg-elevated
---surface, --surface-2
---border, --border-2, --border-glow
---text, --text-primary, --text-secondary, --text-muted
---accent, --accent-2
---neon-cyan, --neon-purple, --neon-green, --neon-yellow
---font-display, --font-mono
---radius, --radius-md, --radius-lg
---perspective
+### Stack Diagram
 
+```yaml
+- type: stack_diagram
+  title: "What really happens first"
+  position: center
+  animation_in: slide_up
+  stagger: 0.2
+  layers:
+    - label: "main()"
+      sublabel: "your function"
+      color: "#ffb703"
+      accent: true
+    - label: "runtime setup"
+      sublabel: "args, memory, startup"
+      color: "#8ecae6"
+    - label: "_start"
+      sublabel: "real entry from the loader"
+      color: "#90be6d"
+```
 
----
+### Flow Diagram
 
-```md
-## Key Decisions
-- No phone chrome (raw canvas export)
-- Shiki cached highlighting
-- GSAP for all animations
-- Zustand store (useStore)
-- Parser never throws
-- Scene remount via key
-- Async highlight before animation
+```yaml
+- type: flow_diagram
+  direction: vertical
+  position: center
+  animation_in: fade_in
+  nodes:
+    - id: loader
+      label: "OS loader"
+      color: "#8ecae6"
+    - id: runtime
+      label: "runtime setup"
+      color: "#ffb703"
+    - id: main
+      label: "main()"
+      color: "#fb8500"
+      accent: true
+  edges:
+    - from: loader
+      to: runtime
+      label: "bootstrap"
+      animated: true
+    - from: runtime
+      to: main
+      label: "handoff"
+      animated: true
+```
 
-## Content Focus
-- Why systems behave a certain way
-- Memory & runtime internals
-- GenAI concepts
-- Language comparisons
+### Tree Diagram
 
-## Scene Design
-- Hook → grid_3d / space
-- Concept → circuit / gradient
-- Code → terminal / code_editor
-- Comparison → split_screen
-- Summary → glow text
-- CTA → grid + callout
+```yaml
+- type: tree_diagram
+  title: "Without main()"
+  position: center
+  animation_in: slide_up
+  nodes:
+    - label: "program launch"
+      color: "#8ecae6"
+      accent: true
+      children:
+        - label: "runtime looks for entry point"
+          color: "#90be6d"
+          children:
+            - label: "no main() found"
+              color: "#fb8500"
+              accent: true
+            - label: "startup fails"
+              color: "#f28482"
+```
 
-## Known Issues
-- Zustand setter is not callback-based
-- Center positioning uses left/right, not translateX
-- Avoid transform on code blocks
-- Shiki async delay
-- Canvas backgrounds don’t auto-resize
-- Always kill GSAP idle tweens
+### Split Screen
 
+```yaml
+- type: split_screen
+  title: "The mental model"
+  position: center
+  animation_in: slide_up
+  left:
+    label: "before"
+    icon: ">"
+    color: "#f28482"
+    items:
+      - "program begins in your file"
+      - "main() is the first instruction"
+  right:
+    label: "after"
+    icon: ">"
+    color: "#8ecae6"
+    items:
+      - "startup code runs first"
+      - "main() is your handoff point"
+```
+
+### Ranking Cards
+
+```yaml
+- type: ranking_cards
+  title: "Search results"
+  position: center
+  animation_in: slide_up
+  items:
+    - title: "runtime startup"
+      subtitle: "closest match"
+      score: "0.94"
+      badge: "top"
+      color: "#8ecae6"
+      accent: true
+    - title: "token overlap"
+      subtitle: "weaker match"
+      score: "0.61"
+      badge: "fallback"
+      color: "#f28482"
+```
+
+### Bullet List
+
+```yaml
+- type: bullet_list
+  items:
+    - "runtime prepares the process"
+    - "control is handed to main()"
+    - "your code starts there"
+  position: center
+  animation_in: slide_up
+  stagger: 0.2
+```
+
+### Image, Divider, Arrow
+
+These are still present in the schema, but they are secondary primitives.
+
+## Supported Values
+
+Positions:
+
+- `center`
+- `top`
+- `bottom`
+- `top_left`
+- `top_right`
+- `bottom_left`
+- `bottom_right`
+
+Entrance animations:
+
+- `fade_in`
+- `zoom_in`
+- `slide_up`
+- `slide_left`
+- `slide_right`
+- `type_in`
+- `pop_in`
+- `glitch`
+- `draw_in`
+- `none`
+
+Idle animations:
+
+- `float`
+- `float_3d`
+- `pulse`
+- `glow`
+- `none`
+
+## Key Implementation Notes
+
+- `parseSchema` should never throw. It returns `{ schema, error }`.
+- Scene element validation lives in `src/engine/parser.ts`.
+- Shared schema types live in `src/types/schema.ts`.
+- Rendering happens in `src/components/SceneRenderer.tsx`.
+- Styling lives in `src/app/globals.css`.
+- Code highlighting is async through Shiki, so code elements wait for highlighted HTML before entrance animation.
+- GSAP owns scene animations. CSS animations are limited to small supporting effects.
+- The preview canvas is raw 9:16 output without phone chrome.
+
+## Product Priority
+
+The main priority is making foreground explanation primitives feel strong enough for dev education reels:
+
+- code editor foreground cards
+- terminal foreground cards
+- clean text hierarchy
+- strong code highlighting
+- readable flow diagrams
+- readable stack diagrams
+- tree diagrams for structured concepts
+- cards for search results, metrics, and comparisons
+- split views for before/after or myth/reality scenes
+
+The tool should help creators explain technical ideas visually without needing to manually record a screen or design slides from scratch.
