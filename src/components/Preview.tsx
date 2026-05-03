@@ -1,152 +1,173 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useRef, useEffect, useState, useCallback } from "react"
+import { ChevronLeft, ChevronRight, Play, Pause, RotateCcw } from "lucide-react"
 import { useStore } from "@/store"
-import CodeBlock from "@/components/CodeBlock"
-import Whiteboard from "@/components/Whiteboard"
-import CaptionOverlay from "@/components/CaptionOverlay"
-import { useSpeech } from "@/hooks/useSpeech"
-
-function RecIndicator() {
-  const { status, duration } = useStore()
-  const mins = String(Math.floor(duration / 60)).padStart(2, "0")
-  const secs = String(duration % 60).padStart(2, "0")
-  if (status === "idle") return null
-  return (
-    <>
-      <div style={{
-        position: "absolute",
-        top: 16,
-        left: 16,
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        zIndex: 30,
-      }}>
-        <div style={{
-          width: 8,
-          height: 8,
-          borderRadius: "50%",
-          background: status === "paused" ? "var(--amber)" : "var(--red)",
-          animation: status === "recording" ? "pulse 1.2s infinite" : "none",
-        }} />
-        <span style={{
-          fontSize: 10,
-          color: "rgba(255,255,255,0.6)",
-          letterSpacing: 1,
-          textTransform: "uppercase",
-          fontFamily: "monospace",
-        }}>
-          {status === "paused" ? "paused" : "rec"}
-        </span>
-      </div>
-      <div style={{
-        position: "absolute",
-        top: 16,
-        right: 16,
-        fontSize: 11,
-        color: "rgba(255,255,255,0.5)",
-        fontFamily: "monospace",
-        zIndex: 30,
-      }}>
-        {mins}:{secs}
-      </div>
-    </>
-  )
-}
+import SceneRenderer from "./SceneRenderer"
 
 export default function Preview() {
-  useSpeech()
-  const frameRef = useRef<HTMLDivElement>(null)
-  const [debugInfo, setDebugInfo] = useState("")
+  const { schema, currentScene, setCurrentScene } = useStore()
+  const [isPlaying, setIsPlaying] = useState(true)
+  const [sceneProgress, setSceneProgress] = useState(0)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const progressRef = useRef(0)
+  const currentSceneRef = useRef(currentScene)
+  const totalScenesRef = useRef(0)
+  const isPlayingRef = useRef(true)
 
+  const scenes = schema?.scenes ?? []
+  const scene = scenes[currentScene]
+  const totalScenes = scenes.length
+
+  useEffect(() => { currentSceneRef.current = currentScene }, [currentScene])
+  useEffect(() => { totalScenesRef.current = totalScenes }, [totalScenes])
+  useEffect(() => { isPlayingRef.current = isPlaying }, [isPlaying])
+
+  const stopPlayback = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    intervalRef.current = null
+    progressRef.current = 0
+    setSceneProgress(0)
+  }, [])
+
+  const startInterval = useCallback((duration: number) => {
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    progressRef.current = 0
+    setSceneProgress(0)
+    const tick = 50
+
+    intervalRef.current = setInterval(() => {
+      if (!isPlayingRef.current) return
+      progressRef.current += tick
+      const pct = Math.min(progressRef.current / duration, 1)
+      setSceneProgress(pct)
+
+      if (progressRef.current >= duration) {
+        progressRef.current = 0
+        setSceneProgress(0)
+        const next = currentSceneRef.current + 1
+        if (next >= totalScenesRef.current) {
+          setCurrentScene(0)
+        } else {
+          setCurrentScene(next)
+        }
+      }
+    }, tick)
+  }, [setCurrentScene])
+
+  const goToScene = useCallback((index: number) => {
+    const clamped = Math.max(0, Math.min(index, totalScenesRef.current - 1))
+    setCurrentScene(clamped)
+  }, [setCurrentScene])
+
+  const togglePlay = useCallback(() => {
+    setIsPlaying(prev => !prev)
+  }, [])
+
+  const reset = useCallback(() => {
+    setIsPlaying(true)
+    setCurrentScene(0)
+  }, [setCurrentScene])
+
+  // Auto-play when schema loads
   useEffect(() => {
-    function update() {
-      if (!frameRef.current) return
-      const r = frameRef.current.getBoundingClientRect()
-      setDebugInfo(`left:${Math.round(r.left)} top:${Math.round(r.top)} ${Math.round(r.width)}×${Math.round(r.height)} | innerW:${window.innerWidth}`)
+    if (!schema) {
+      stopPlayback()
+      return
     }
-    update()
-    window.addEventListener("resize", update)
-    return () => window.removeEventListener("resize", update)
+    setIsPlaying(true)
+    const duration = (scenes[0]?.duration ?? 3) * 1000
+    setCurrentScene(0)
+    startInterval(duration)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schema])
+
+  // Restart interval on scene change
+  useEffect(() => {
+    if (!schema) return
+    const duration = (scenes[currentScene]?.duration ?? 3) * 1000
+    startInterval(duration)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentScene])
+
+  // Cleanup
+  useEffect(() => {
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [])
 
   return (
-    <div style={{
-      flex: 1,
-      background: "#080809",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      position: "relative",
-      overflow: "hidden",
-    }}>
-      <div style={{
-        position: "absolute",
-        inset: 0,
-        background: "radial-gradient(ellipse at 40% 50%, rgba(139,92,246,0.05) 0%, transparent 65%)",
-        pointerEvents: "none",
-      }} />
-
-      <div
-        ref={frameRef}
-        data-phone-frame
-        style={{
-          width: 360,
-          height: 640,
-          borderRadius: 36,
-          border: "1.5px solid rgba(255,255,255,0.12)",
-          background: "linear-gradient(180deg, #0d0d1a 0%, #0a0a12 100%)",
-          position: "relative",
-          overflow: "hidden",
-          boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)",
-          flexShrink: 0,
-        }}
-      >
-        <RecIndicator />
-        <CodeBlock />
-        <Whiteboard />
-        <CaptionOverlay />
-      </div>
-
-      <div style={{
-        position: "absolute",
-        bottom: 20,
-        right: 20,
-        display: "flex",
-        flexDirection: "column",
-        gap: 6,
-      }}>
-        {[
-          { label: "format", value: "9:16" },
-          { label: "fps", value: "30 fps" },
-        ].map((s) => (
-          <div key={s.label} style={{
-            background: "rgba(0,0,0,0.5)",
-            border: "0.5px solid var(--border)",
-            borderRadius: "var(--radius-md)",
-            padding: "5px 10px",
-            backdropFilter: "blur(8px)",
-          }}>
-            <div className="label" style={{ marginBottom: 2 }}>{s.label}</div>
-            <div style={{ fontSize: 10, fontFamily: "monospace", color: "var(--text-primary)" }}>
-              {s.value}
+    <div className="preview-panel">
+      {/* Canvas */}
+      <div className="canvas-wrapper">
+        <div className="canvas-frame">
+          {schema && scene ? (
+            <SceneRenderer
+              key={`${currentScene}-${schema.meta.title}`}
+              scene={scene}
+              isPlaying={isPlaying}
+            />
+          ) : (
+            <div className="empty-state">
+              <div className="empty-icon">⬡</div>
+              <p className="empty-text">Paste a YAML schema<br />to preview your reel</p>
             </div>
-          </div>
-        ))}
+          )}
 
-        <div style={{
-          background: "rgba(0,0,0,0.6)",
-          border: "0.5px solid rgba(139,92,246,0.3)",
-          borderRadius: "var(--radius-md)",
-          padding: "5px 8px",
-        }}>
-          <div className="label" style={{ marginBottom: 2 }}>debug</div>
-          <div style={{ fontSize: 8, fontFamily: "monospace", color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
-            {debugInfo}
-          </div>
+          {/* Progress bar */}
+          {schema && (
+            <div className="scene-progress-bar">
+              <div
+                className="scene-progress-fill"
+                style={{ width: `${sceneProgress * 100}%` }}
+              />
+            </div>
+          )}
+
+          {/* Scene counter */}
+          {schema && totalScenes > 1 && (
+            <div className="scene-counter-overlay">
+              {currentScene + 1} / {totalScenes}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Controls */}
+      {schema && (
+        <div className="preview-controls">
+          <button className="ctrl-btn" onClick={reset} title="Reset">
+            <RotateCcw size={13} />
+          </button>
+          <button
+            className="ctrl-btn"
+            onClick={() => goToScene(currentScene - 1)}
+            disabled={currentScene === 0}
+          >
+            <ChevronLeft size={15} />
+          </button>
+          <button className="ctrl-btn ctrl-btn--play" onClick={togglePlay}>
+            {isPlaying ? <Pause size={15} /> : <Play size={15} />}
+          </button>
+          <button
+            className="ctrl-btn"
+            onClick={() => goToScene(currentScene + 1)}
+            disabled={currentScene === totalScenes - 1}
+          >
+            <ChevronRight size={15} />
+          </button>
+
+          {/* Scene dots */}
+          <div className="scene-dots">
+            {scenes.map((_, i) => (
+              <button
+                key={i}
+                className={`scene-dot ${i === currentScene ? "scene-dot--active" : ""}`}
+                onClick={() => goToScene(i)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

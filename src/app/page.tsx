@@ -1,34 +1,22 @@
-"use client"
+import Editor from "@/components/Editor"
+import Preview from "@/components/Preview"
+import GitHubStar from "@/components/GitHubStar"
 
-import dynamic from "next/dynamic"
-import Sidebar from "@/components/Sidebar"
-import Timeline from "@/components/Timeline"
-import SidePanel from "@/components/SidePanel"
-
-const Preview = dynamic(() => import("@/components/Preview"), { ssr: false })
-const FFmpegLoader = dynamic(() => import("@/components/FFmpegLoader"), { ssr: false })
-
-export default function Page() {
+export default function Home() {
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      height: "100vh",
-      width: "100vw",
-      background: "var(--bg-base)",
-      overflow: "hidden",
-    }}>
-      <FFmpegLoader />
-      <div style={{
-        display: "flex",
-        flex: 1,
-        overflow: "hidden",
-      }}>
-        <Sidebar />
+    <div className="app-layout">
+      <header className="app-header">
+        <div className="app-header-left">
+          <span className="app-logo">DevReel</span>
+          <span className="app-tagline">yaml → reel</span>
+        </div>
+        <GitHubStar />
+      </header>
+
+      <main className="app-main">
+        <Editor />
         <Preview />
-        <SidePanel />
-      </div>
-      <Timeline />
+      </main>
     </div>
   )
 }

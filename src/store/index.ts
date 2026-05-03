@@ -1,97 +1,46 @@
 import { create } from "zustand"
-
-type RecordingStatus = "idle" | "recording" | "paused"
-type CaptionStyle = "bold-yellow" | "white" | "kinetic"
-type Tool = "cursor" | "draw" | "code"
-type Template = "quick-tip" | "bug-fix" | "whiteboard" | "live-code"
-
-interface Caption {
-  id: string
-  text: string
-  startTime: number
-  endTime: number
-}
+import type { ReelSchema, Scene } from "@/types/schema"
 
 interface StoreState {
-  status: RecordingStatus
-  duration: number
-  tool: Tool
-  captionStyle: CaptionStyle
-  template: Template
-  captions: Caption[]
-  activeCaptions: Caption[]
-  brushColor: string
-  brushSize: number
-  showCode: boolean
-  showCaptions: boolean
-  hasRecording: boolean
-  recordingBlob: Blob | null
-  codeLanguage: "rust" | "python"
-  codeContent: string
-  ffmpegLoaded: boolean
-  ffmpegLoading: boolean
+  schema: ReelSchema | null
+  rawInput: string
+  parseError: string | null
+  currentScene: number
+  isPlaying: boolean
+  isExporting: boolean
   exportProgress: number
   exportStage: string
+  previewReady: boolean
 
-  setStatus: (s: RecordingStatus) => void
-  setDuration: (d: number) => void
-  setTool: (t: Tool) => void
-  setCaptionStyle: (s: CaptionStyle) => void
-  setTemplate: (t: Template) => void
-  addCaption: (c: Caption) => void
-  setActiveCaptions: (c: Caption[]) => void
-  setBrushColor: (c: string) => void
-  setBrushSize: (s: number) => void
-  setShowCode: (v: boolean) => void
-  setShowCaptions: (v: boolean) => void
-  setHasRecording: (v: boolean) => void
-  setRecordingBlob: (b: Blob | null) => void
-  setCodeLanguage: (l: "rust" | "python") => void
-  setCodeContent: (c: string) => void
-  setFfmpegLoaded: (v: boolean) => void
-  setFfmpegLoading: (v: boolean) => void
+  setSchema: (s: ReelSchema | null) => void
+  setRawInput: (r: string) => void
+  setParseError: (e: string | null) => void
+  setCurrentScene: (n: number) => void
+  setIsPlaying: (v: boolean) => void
+  setIsExporting: (v: boolean) => void
   setExportProgress: (p: number) => void
   setExportStage: (s: string) => void
+  setPreviewReady: (v: boolean) => void
 }
 
 export const useStore = create<StoreState>((set) => ({
-  status: "idle",
-  duration: 0,
-  tool: "cursor",
-  captionStyle: "bold-yellow",
-  template: "quick-tip",
-  captions: [],
-  activeCaptions: [],
-  brushColor: "#f97316",
-  brushSize: 3,
-  showCode: false,
-  showCaptions: false,
-  hasRecording: false,
-  recordingBlob: null,
-  codeLanguage: "rust",
-  codeContent: "",
-  ffmpegLoaded: false,
-  ffmpegLoading: false,
+  schema: null,
+  rawInput: "",
+  parseError: null,
+  currentScene: 0,
+  isPlaying: false,
+  isExporting: false,
   exportProgress: 0,
   exportStage: "",
+  previewReady: false,
 
-  setStatus: (status) => set({ status }),
-  setDuration: (duration) => set({ duration }),
-  setTool: (tool) => set({ tool }),
-  setCaptionStyle: (captionStyle) => set({ captionStyle }),
-  setTemplate: (template) => set({ template }),
-  addCaption: (c) => set((s) => ({ captions: [...s.captions, c] })),
-  setActiveCaptions: (activeCaptions) => set({ activeCaptions }),
-  setBrushColor: (brushColor) => set({ brushColor }),
-  setBrushSize: (brushSize) => set({ brushSize }),
-  setShowCode: (showCode) => set({ showCode }),
-  setShowCaptions: (showCaptions) => set({ showCaptions }),
-  setHasRecording: (hasRecording) => set({ hasRecording }),
-  setRecordingBlob: (recordingBlob) => set({ recordingBlob }),
-  setCodeLanguage: (codeLanguage) => set({ codeLanguage }),
-  setCodeContent: (codeContent) => set({ codeContent }),
-  setFfmpegLoaded: (ffmpegLoaded) => set({ ffmpegLoaded }),
-  setFfmpegLoading: (ffmpegLoading) => set({ ffmpegLoading }),
+  setSchema: (schema) => set({ schema }),
+  setRawInput: (rawInput) => set({ rawInput }),
+  setParseError: (parseError) => set({ parseError }),
+  setCurrentScene: (currentScene) => set({ currentScene }),
+  setIsPlaying: (isPlaying) => set({ isPlaying }),
+  setIsExporting: (isExporting) => set({ isExporting }),
   setExportProgress: (exportProgress) => set({ exportProgress }),
   setExportStage: (exportStage) => set({ exportStage }),
+  setPreviewReady: (previewReady) => set({ previewReady }),
 }))
