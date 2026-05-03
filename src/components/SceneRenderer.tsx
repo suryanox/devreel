@@ -103,7 +103,11 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
         const panels = el.querySelectorAll<HTMLElement>(".split-panel")
         staggerIn(Array.from(panels), element.animation_in ?? "slide_up", 0.2, delay)
       } else {
-        animateIn(el, element.animation_in ?? "fade_in", delay)
+        const isCodeEl = element.type === "code" || element.type === "code_highlight"
+        const animIn = (isCodeEl && element.animation_in === "type_in")
+          ? "fade_in"
+          : (element.animation_in ?? "fade_in")
+        animateIn(el, animIn, delay)
       }
 
       if (idle && idle !== "none") {
@@ -114,25 +118,23 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
     })
   }, [scene, highlightedCode])
 
-  // ─── Background ─────────────────────────────────────────
 
   const renderBackground = () => {
     const bg = scene.background
-    if (!bg) return <div className="scene-bg" style={{ background: "#080810" }} />
+    if (!bg) return <div className="scene-bg" style={{ background: "#090d1a" }} />
     switch (bg.type) {
-      case "gradient":    return <Gradient colors={bg.gradient ?? ["#080810", "#0f172a"]} />
-      case "solid":       return <div className="scene-bg" style={{ background: bg.color ?? "#080810" }} />
+      case "gradient":    return <Gradient colors={bg.gradient ?? ["#090d1a", "#0f172a"]} />
+      case "solid":       return <div className="scene-bg" style={{ background: bg.color ?? "#090d1a" }} />
       case "terminal":    return <Terminal />
       case "blackboard":  return <Blackboard />
       case "code_editor": return <CodeEditor />
       case "space":       return <Space />
       case "grid_3d":     return <Grid3D />
       case "circuit":     return <Circuit />
-      default:            return <div className="scene-bg" style={{ background: "#080810" }} />
+      default:            return <div className="scene-bg" style={{ background: "#090d1a" }} />
     }
   }
 
-  // ─── Helpers ─────────────────────────────────────────────
 
   const getPositionClass = (position?: string) => {
     switch (position) {
@@ -158,7 +160,6 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
     }
   }
 
-  // ─── Code block shared JSX ───────────────────────────────
 
   const renderCodeBlock = (
     index: number,
@@ -184,8 +185,8 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
     return (
       <div
         ref={el => { elementRefs.current[index] = el }}
-        className={`scene-element ${posClass} code-block`}
-        style={{ opacity: 0 }}
+        className={`scene-element scene-element--code ${posClass} code-block`}
+        style={{ opacity: 0, textAlign: "left" }}
       >
         <div className="code-block-header">
           <span className="code-dot code-dot--red" />
@@ -207,14 +208,12 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
     )
   }
 
-  // ─── Element renderers ────────────────────────────────────
 
   const renderElement = (element: SceneElement, index: number) => {
     const posClass = getPositionClass(element.position)
 
     switch (element.type) {
 
-      // ── Text ──────────────────────────────────────────────
       case "text":
         return (
           <div
@@ -232,7 +231,6 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
           </div>
         )
 
-      // ── Code ──────────────────────────────────────────────
       case "code":
         return (
           <div key={index}>
@@ -245,7 +243,6 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
           </div>
         )
 
-      // ── Code Highlight ────────────────────────────────────
       case "code_highlight":
         return (
           <div key={index}>
@@ -260,7 +257,6 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
           </div>
         )
 
-      // ── Bullet list ───────────────────────────────────────
       case "bullet_list":
         return (
           <div
@@ -283,7 +279,6 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
           </div>
         )
 
-      // ── Callout ───────────────────────────────────────────
       case "callout":
         return (
           <div
@@ -296,7 +291,8 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
               className="callout"
               style={{
                 borderLeftColor: element.accent ?? "#22d3ee",
-                background: `${element.accent ?? "#22d3ee"}08`,
+                borderColor: `${element.accent ?? "#22d3ee"}55`,
+                background: `${element.accent ?? "#22d3ee"}14`,
               }}
             >
               <p className="callout-text">{element.value}</p>
@@ -304,7 +300,6 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
           </div>
         )
 
-      // ── Flow diagram ──────────────────────────────────────
       case "flow_diagram": {
         const isHorizontal = (element.direction ?? "horizontal") === "horizontal"
         return (
@@ -327,19 +322,18 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
                       display: "flex",
                       flexDirection: isHorizontal ? "row" : "column",
                       alignItems: "center",
+                      flex: isHorizontal ? undefined : "none",
                     }}
                   >
                     <div
                       className={`flow-node ${node.accent ? "flow-node--accent" : ""}`}
                       style={{
                         opacity: 0,
-                        borderColor: node.color ?? undefined,
-                        boxShadow: node.accent
-                          ? `0 0 16px ${node.color ?? "#22d3ee"}88`
-                          : undefined,
-                        color: node.accent
-                          ? (node.color ?? "#22d3ee")
-                          : undefined,
+                        borderColor: node.color ? `${node.color}88` : undefined,
+                        background: node.color ? `${node.color}18` : undefined,
+                        color: node.color ?? undefined,
+                        width: isHorizontal ? undefined : "100%",
+                        justifyContent: isHorizontal ? undefined : "center",
                       }}
                     >
                       <span className="flow-node-label">{node.label}</span>
@@ -347,17 +341,31 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
                     {edge && (
                       <div
                         className={`flow-edge ${edge.animated ? "flow-edge--animated" : ""}`}
-                        style={{ opacity: 0 }}
+                        style={{
+                          opacity: 0,
+                          flexDirection: isHorizontal ? "row" : "column",
+                          alignItems: "center",
+                          minWidth: isHorizontal ? 28 : undefined,
+                          minHeight: isHorizontal ? undefined : 24,
+                          padding: isHorizontal ? "0 2px" : "2px 0",
+                        }}
                       >
-                        <div className="flow-edge-line" />
+                        <div
+                          className="flow-edge-line"
+                          style={isHorizontal ? undefined : {
+                            width: 1,
+                            height: "100%",
+                            minHeight: 20,
+                            minWidth: undefined,
+                            background: "linear-gradient(180deg, rgba(99,102,241,0.4), rgba(99,102,241,0.7))",
+                          }}
+                        />
                         <svg
                           className="flow-edge-arrow"
                           width="10"
                           height="14"
                           viewBox="0 0 10 14"
-                          style={{
-                            transform: isHorizontal ? "rotate(0deg)" : "rotate(90deg)",
-                          }}
+                          style={{ transform: isHorizontal ? "rotate(0deg)" : "rotate(90deg)", flexShrink: 0 }}
                         >
                           <path
                             d="M0 0 L10 7 L0 14"
@@ -381,7 +389,6 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
         )
       }
 
-      // ── Stack diagram ─────────────────────────────────────
       case "stack_diagram":
         return (
           <div
@@ -394,43 +401,39 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
               <p className="stack-title">{element.title}</p>
             )}
             <div className="stack-diagram">
-              {element.layers.map((layer, li) => (
+              {element.layers.map((layer, li) => {
+                const layerColor = layer.color ?? (layer.accent ? "#22d3ee" : "#6366f1")
+                const total = element.layers.length
+                return (
                 <div
                   key={li}
                   className={`stack-layer ${layer.accent ? "stack-layer--accent" : ""}`}
                   style={{
                     opacity: 0,
-                    borderColor: layer.color ?? undefined,
-                    background: layer.accent
-                      ? `${layer.color ?? "#22d3ee"}12`
-                      : undefined,
-                    boxShadow: layer.accent
-                      ? `0 0 20px ${layer.color ?? "#22d3ee"}44`
-                      : undefined,
+                    boxShadow: `inset 4px 0 0 ${layerColor}`,
                   }}
                 >
-                  <span
-                    className="stack-layer-label"
-                    style={{
-                      color: layer.accent
-                        ? (layer.color ?? "#22d3ee")
-                        : undefined,
-                    }}
-                  >
-                    {layer.label}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span className="stack-layer-index">{String(total - li).padStart(2, "0")}</span>
+                    <span
+                      className="stack-layer-label"
+                      style={{ color: layer.accent ? layerColor : undefined }}
+                    >
+                      {layer.label}
+                    </span>
+                  </div>
                   {layer.sublabel && (
                     <span className="stack-layer-sublabel">
                       {layer.sublabel}
                     </span>
                   )}
                 </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )
 
-      // ── Split screen ──────────────────────────────────────
       case "split_screen":
         return (
           <div
@@ -482,7 +485,6 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
           </div>
         )
 
-      // ── Divider ───────────────────────────────────────────
       case "divider":
         return (
           <div
@@ -498,7 +500,6 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
           </div>
         )
 
-      // ── Arrow ─────────────────────────────────────────────
       case "arrow":
         return (
           <div
@@ -516,7 +517,6 @@ export default function SceneRenderer({ scene, isPlaying }: Props) {
           </div>
         )
 
-      // ── Image ─────────────────────────────────────────────
       case "image":
         return (
           <div
