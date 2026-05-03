@@ -1,7 +1,7 @@
 # DevReel — AI-Powered Dev Reel Generator
 
 ## What We're Building
-A web tool where devs write a YAML/JSON schema describing their reel, paste it into an editor, and the engine renders it as a 9:16 video canvas. No manual recording. Schema → Preview → Export.
+A web tool where devs write a YAML schema describing their reel, paste it into an editor, and the engine renders it as a 9:16 video canvas. No manual recording. Schema → Preview → Export.
 
 ## How It Works
 1. User writes schema (or asks AI to generate one)
